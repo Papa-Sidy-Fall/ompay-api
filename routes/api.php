@@ -34,6 +34,43 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/distributeurs', [DistributeurController::class, 'index']);
 });
 
+// Route pour reset la base de données (ADMIN seulement - À SUPPRIMER APRÈS USAGE)
+Route::get('/admin/reset-database', function () {
+    // ⚠️ ENDPOINT DANGEREUX - À SUPPRIMER APRÈS USAGE EN PRODUCTION
+
+    // Vérification de sécurité basique
+    $secret = request()->query('secret');
+    $expectedSecret = env('ADMIN_SECRET', 'ompay-admin-2025');
+
+    if ($secret !== $expectedSecret) {
+        return response()->json([
+            'error' => 'Accès non autorisé',
+            'message' => 'Clé secrète requise'
+        ], 403);
+    }
+
+    try {
+        // Exécuter migrate:fresh --seed
+        \Illuminate\Support\Facades\Artisan::call('migrate:fresh --seed');
+
+        // Récupérer le résultat
+        $output = \Illuminate\Support\Facades\Artisan::output();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Base de données reset avec succès',
+            'details' => 'Toutes les tables ont été recréées et les seeders exécutés',
+            'output' => $output
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Erreur lors du reset',
+            'message' => $e->getMessage()
+        ], 500);
+    }
+});
+
 // Route pour la documentation Swagger
 Route::get('/documentation', function () {
     $path = storage_path('docs/api-docs.json');
