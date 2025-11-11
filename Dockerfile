@@ -52,13 +52,11 @@ RUN mkdir -p storage/framework/{cache,data,sessions,testing,views} \
 
 # Ne PAS créer de .env ici - utiliser les variables d'environnement de Render
 
-# Copier le script d'entrée en tant que root
+# Copier le script d'entrée
 COPY docker-entrypoint.sh /usr/local/bin/
-RUN ls -la /usr/local/bin/docker-entrypoint.sh && \
-    chmod +x /usr/local/bin/docker-entrypoint.sh && \
-    chown root:root /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# Pré-générer les clés Passport (sera remplacé par le script d'entrée si nécessaire)
+# Préparer les répertoires de stockage
 RUN mkdir -p storage \
     && chown -R laravel:laravel storage
 
