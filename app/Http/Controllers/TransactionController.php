@@ -38,20 +38,14 @@ class TransactionController extends Controller
             'type' => 'transaction'
         ]);
 
-        $otpResponse = $otpController->sendOtp($sendOtpRequest);
-
-        if ($otpResponse->getStatusCode() !== 200) {
-            return $this->errorResponse('Erreur lors de l\'envoi du code OTP', 500);
-        }
-
-        $otpData = json_decode($otpResponse->getContent(), true);
+        $otpController->sendOtp($sendOtpRequest);
 
         return $this->successResponse([
             'transaction_id' => Str::uuid()->toString(),
             'montant' => $request->montant,
             'description' => $request->description,
             'otp_required' => true,
-            'expire_at' => $otpData['donnees']['expire_at'] ?? Carbon::now()->addMinutes(5)->toISOString(),
+            'expire_at' => Carbon::now()->addMinutes(5)->toISOString(),
         ], 'Code OTP envoyé pour confirmer la transaction');
     }
 
@@ -76,13 +70,7 @@ class TransactionController extends Controller
             'type' => 'transaction'
         ]);
 
-        $otpResponse = $otpController->sendOtp($sendOtpRequest);
-
-        if ($otpResponse->getStatusCode() !== 200) {
-            return $this->errorResponse('Erreur lors de l\'envoi du code OTP', 500);
-        }
-
-        $otpData = json_decode($otpResponse->getContent(), true);
+        $otpController->sendOtp($sendOtpRequest);
 
         return $this->successResponse([
             'transaction_id' => Str::uuid()->toString(),
@@ -90,7 +78,7 @@ class TransactionController extends Controller
             'destinataire_uuid' => $request->destinataire_uuid,
             'description' => $request->description,
             'otp_required' => true,
-            'expire_at' => $otpData['donnees']['expire_at'] ?? Carbon::now()->addMinutes(5)->toISOString(),
+            'expire_at' => Carbon::now()->addMinutes(5)->toISOString(),
         ], 'Code OTP envoyé pour confirmer la transaction');
     }
 
