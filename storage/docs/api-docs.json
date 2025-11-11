@@ -1,0 +1,469 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "OmPay API",
+    "description": "API de paiement mobile OmPay avec authentification OTP",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:8000",
+      "description": "Serveur de développement"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "paths": {
+    "/api/auth/register": {
+      "post": {
+        "summary": "Inscription d'un nouvel utilisateur",
+        "description": "Crée un compte utilisateur et envoie automatiquement un code OTP par SMS",
+        "tags": ["Authentification"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["nom", "telephone", "pin"],
+                "properties": {
+                  "nom": {"type": "string", "example": "Jean Dupont"},
+                  "telephone": {"type": "string", "example": "771234567"},
+                  "pin": {"type": "string", "example": "1234"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Utilisateur créé avec succès",
+            "content": {
+              "application/json": {
+                "example": {
+                  "succes": true,
+                  "message": "Utilisateur créé avec succès. Vérifiez votre téléphone pour le code OTP.",
+                  "donnees": {
+                    "utilisateur": {
+                      "id": 1,
+                      "uuid": "550e8400-e29b-41d4-a716-446655440000",
+                      "nom": "Jean Dupont",
+                      "telephone": "771234567"
+                    },
+                    "message_complementaire": "Un code OTP a été envoyé à votre téléphone pour finaliser l'inscription"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Données invalides",
+            "content": {
+              "application/json": {
+                "example": {
+                  "succes": false,
+                  "message": "Les données fournies ne sont pas valides",
+                  "erreurs": {
+                    "telephone": ["Ce numéro de téléphone est déjà utilisé"]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "summary": "Connexion utilisateur",
+        "description": "Authentifie l'utilisateur et envoie un code OTP par SMS",
+        "tags": ["Authentification"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["telephone", "pin"],
+                "properties": {
+                  "telephone": {"type": "string", "example": "771234567"},
+                  "pin": {"type": "string", "example": "1234"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Code OTP envoyé",
+            "content": {
+              "application/json": {
+                "example": {
+                  "succes": true,
+                  "message": "Veuillez vérifier votre téléphone avec le code OTP",
+                  "donnees": {
+                    "utilisateur": {
+                      "id": 1,
+                      "uuid": "550e8400-e29b-41d4-a716-446655440000",
+                      "nom": "Jean Dupont",
+                      "telephone": "771234567"
+                    },
+                    "message_complementaire": "Un code OTP a été envoyé à votre numéro de téléphone"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Utilisateur non trouvé",
+            "content": {
+              "application/json": {
+                "example": {
+                  "succes": false,
+                  "message": "Numéro de téléphone non enregistré"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "PIN incorrect",
+            "content": {
+              "application/json": {
+                "example": {
+                  "succes": false,
+                  "message": "PIN incorrect"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/otp/verify": {
+      "post": {
+        "summary": "Vérifier un code OTP",
+        "description": "Vérifie le code OTP et retourne un token JWT pour la connexion ou confirme l'inscription",
+        "tags": ["OTP"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["telephone", "code", "type"],
+                "properties": {
+                  "telephone": {"type": "string", "example": "771234567"},
+                  "code": {"type": "string", "example": "0939"},
+                  "type": {"type": "string", "enum": ["inscription", "connexion", "transaction"]}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Code OTP vérifié",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "inscription": {
+                    "summary": "Vérification d'inscription",
+                    "value": {
+                      "succes": true,
+                      "message": "Code OTP vérifié avec succès",
+                      "donnees": {
+                        "telephone": "771234567",
+                        "type": "inscription",
+                        "verifie": true,
+                        "utilisateur_existe": true,
+                        "utilisateur": {
+                          "id": 7,
+                          "uuid": "0549f1b0-2db1-4b9a-bf89-0ed594bb0bd0",
+                          "nom": "Jean Dupont",
+                          "telephone": "771234567",
+                          "email": null,
+                          "created_at": "2025-11-11T11:47:37.000000Z",
+                          "updated_at": "2025-11-11T11:47:37.000000Z"
+                        },
+                        "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."
+                      }
+                    }
+                  },
+                  "connexion": {
+                    "summary": "Vérification de connexion (avec token)",
+                    "value": {
+                      "succes": true,
+                      "message": "Code OTP vérifié avec succès",
+                      "donnees": {
+                        "telephone": "771234567",
+                        "type": "connexion",
+                        "verifie": true,
+                        "utilisateur": {
+                          "id": 1,
+                          "uuid": "550e8400-e29b-41d4-a716-446655440000",
+                          "nom": "Jean Dupont",
+                          "telephone": "771234567"
+                        },
+                        "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Code OTP invalide ou expiré",
+            "content": {
+              "application/json": {
+                "example": {
+                  "succes": false,
+                  "message": "Code OTP invalide ou expiré"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Données de requête invalides",
+            "content": {
+              "application/json": {
+                "example": {
+                  "succes": false,
+                  "message": "Les données fournies ne sont pas valides",
+                  "erreurs": {
+                    "code": ["Le code OTP doit contenir exactement 4 caractères"]
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erreur interne du serveur",
+            "content": {
+              "application/json": {
+                "example": {
+                  "succes": false,
+                  "message": "Erreur lors de la vérification du code OTP"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/otp/resend": {
+      "post": {
+        "summary": "Renvoyer un code OTP",
+        "description": "Renvoyer un nouveau code OTP pour un numéro de téléphone",
+        "tags": ["OTP"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["telephone", "type"],
+                "properties": {
+                  "telephone": {"type": "string", "example": "771234567"},
+                  "type": {"type": "string", "enum": ["inscription", "connexion", "transaction"]}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Nouveau code OTP envoyé",
+            "content": {
+              "application/json": {
+                "example": {
+                  "succes": true,
+                  "message": "Nouveau code OTP envoyé avec succès",
+                  "donnees": {
+                    "telephone": "771234567",
+                    "type": "connexion",
+                    "expire_at": "2025-11-11T10:01:29.000000Z"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/transactions/depot": {
+      "post": {
+        "summary": "Dépôt d'argent",
+        "description": "Crédite le compte utilisateur",
+        "tags": ["Transactions"],
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["montant"],
+                "properties": {
+                  "montant": {"type": "number", "example": 100.00},
+                  "description": {"type": "string", "example": "Dépôt initial"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Dépôt effectué",
+            "content": {
+              "application/json": {
+                "example": {
+                  "succes": true,
+                  "message": "Dépôt effectué avec succès",
+                  "donnees": {
+                    "nouveau_solde": "100.00",
+                    "montant_depose": 100
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/transactions/pay": {
+      "post": {
+        "summary": "Effectuer un paiement",
+        "description": "Initie un paiement nécessitant confirmation OTP",
+        "tags": ["Transactions"],
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["montant"],
+                "properties": {
+                  "montant": {"type": "number", "example": 50.00},
+                  "description": {"type": "string", "example": "Paiement test"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Code OTP envoyé pour confirmation",
+            "content": {
+              "application/json": {
+                "example": {
+                  "succes": true,
+                  "message": "Code OTP envoyé pour confirmer la transaction",
+                  "donnees": {
+                    "transaction_id": "894fc500-b74d-4ede-891e-5f54b3f1ce6a",
+                    "montant": 50,
+                    "description": "Paiement test",
+                    "otp_required": true,
+                    "expire_at": "2025-11-11T09:56:29.000000Z"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/transactions/confirm": {
+      "post": {
+        "summary": "Confirmer une transaction",
+        "description": "Valide une transaction avec le code OTP",
+        "tags": ["Transactions"],
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["transaction_id", "code"],
+                "properties": {
+                  "transaction_id": {"type": "string", "example": "894fc500-b74d-4ede-891e-5f54b3f1ce6a"},
+                  "code": {"type": "string", "example": "0169"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Transaction confirmée",
+            "content": {
+              "application/json": {
+                "example": {
+                  "succes": true,
+                  "message": "Transaction confirmée avec succès"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/transactions": {
+      "get": {
+        "summary": "Historique des transactions",
+        "description": "Récupère l'historique des transactions de l'utilisateur",
+        "tags": ["Transactions"],
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "Liste des transactions",
+            "content": {
+              "application/json": {
+                "example": {
+                  "succes": true,
+                  "message": "Opération réussie",
+                  "donnees": {
+                    "transactions": [
+                      {
+                        "uuid": "bd86a2fa-99f4-4cbe-b5c7-75940c2df23e",
+                        "utilisateur_uuid": "d4663ad3-9512-43d1-aa95-83ab84a0caf5",
+                        "type": "paiement",
+                        "montant": "-50.00",
+                        "destinataire_uuid": null,
+                        "description": "Paiement confirmé",
+                        "created_at": "2025-11-11T09:53:24.000000Z"
+                      },
+                      {
+                        "uuid": "ec266bd9-94a9-41d3-bfbb-f6e3f895feb5",
+                        "utilisateur_uuid": "d4663ad3-9512-43d1-aa95-83ab84a0caf5",
+                        "type": "depot",
+                        "montant": "100.00",
+                        "destinataire_uuid": null,
+                        "description": "Dépôt initial",
+                        "created_at": "2025-11-11T09:48:08.000000Z"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

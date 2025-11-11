@@ -33,3 +33,15 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/transactions/{uuid}', [TransactionController::class, 'show']);
     Route::get('/distributeurs', [DistributeurController::class, 'index']);
 });
+
+// Route pour la documentation Swagger
+Route::get('/documentation', function () {
+    $path = storage_path('docs/api-docs.json');
+    if (file_exists($path)) {
+        $content = file_get_contents($path);
+        $data = json_decode($content, true);
+        return response()->json($data);
+    }
+
+    return response()->json(['error' => 'Documentation not found'], 404);
+});

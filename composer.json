@@ -6,6 +6,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.1",
+        "darkaonline/swagger-lume": "^10.0",
         "getbrevo/brevo-php": "^2.0",
         "guzzlehttp/guzzle": "^7.10",
         "laravel/framework": "^10.10",

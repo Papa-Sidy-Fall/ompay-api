@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * @OA\Tag(
+ *     name="OTP",
+ *     description="Gestion des codes OTP pour l'authentification"
+ * )
+ */
+
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ResendOtpRequest;
@@ -18,7 +25,40 @@ class OtpController extends Controller
     use ApiResponse;
 
     /**
-     * Envoyer un code OTP
+     * @OA\Post(
+     *     path="/api/otp/send",
+     *     summary="Envoyer un code OTP",
+     *     description="Envoie un code OTP par SMS pour l'authentification ou les transactions",
+     *     operationId="sendOtp",
+     *     tags={"OTP"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"telephone","type"},
+     *             @OA\Property(property="telephone", type="string", example="771234567", description="Numéro de téléphone"),
+     *             @OA\Property(property="type", type="string", enum={"inscription", "connexion", "transaction"}, example="connexion", description="Type d'OTP")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Code OTP envoyé",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="succes", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Code OTP envoyé avec succès"),
+     *             @OA\Property(property="donnees", type="object",
+     *                 @OA\Property(property="expire_at", type="string", format="date-time", example="2025-11-11T09:56:29.000000Z")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Téléphone non enregistré (pour connexion)",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="succes", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Ce numéro de téléphone n'est pas enregistré")
+     *         )
+     *     )
+     * )
      */
     public function sendOtp(SendOtpRequest $request)
     {
@@ -85,19 +125,86 @@ class OtpController extends Controller
 
     /**
      * Vérifier un code OTP
+     *
+     * @OA\Post(
+     *     path="/api/otp/verify",
+     *     summary="Vérifier un code OTP",
+     *     description="Vérifie le code OTP et retourne un token JWT pour la connexion ou confirme l'inscription",
+     *     operationId="verifyOtp",
+     *     tags={"OTP"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"telephone","code","type"},
+     *             @OA\Property(property="telephone", type="string", example="771234567", description="Numéro de téléphone"),
+     *             @OA\Property(property="code", type="string", example="0939", description="Code OTP à 4 chiffres"),
+     *             @OA\Property(property="type", type="string", enum={"inscription", "connexion", "transaction"}, example="inscription", description="Type d'OTP")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Code OTP vérifié",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="succes", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Code OTP vérifié avec succès"),
+     *             @OA\Property(property="donnees", type="object",
+     *                 @OA\Property(property="telephone", type="string", example="771234567"),
+     *                 @OA\Property(property="type", type="string", example="inscription"),
+     *                 @OA\Property(property="verifie", type="boolean", example=true),
+     *                 @OA\Property(property="utilisateur_existe", type="boolean", example=true),
+     *                 @OA\Property(property="utilisateur", type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="uuid", type="string", example="550e8400-e29b-41d4-a716-446655440000"),
+     *                     @OA\Property(property="nom", type="string", example="Jean Dupont"),
+     *                     @OA\Property(property="telephone", type="string", example="771234567")
+     *                 ),
+     *                 @OA\Property(property="token", type="string", example="eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9...", description="Token JWT pour l'authentification (uniquement pour connexion)")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Code OTP invalide ou expiré",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="succes", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Code OTP invalide ou expiré")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Données de requête invalides",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="succes", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Les données fournies ne sont pas valides"),
+     *             @OA\Property(property="erreurs", type="object",
+     *                 @OA\Property(property="code", type="array", @OA\Items(type="string", example="Le code OTP doit contenir exactement 4 caractères"))
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur interne du serveur",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="succes", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Erreur lors de la vérification du code OTP")
+     *         )
+     *     )
+     * )
      */
     public function verifyOtp(VerifyOtpRequest $request)
     {
         try {
+            Log::info("Tentative de vérification OTP: telephone={$request->telephone}, code={$request->code}, type={$request->type}");
+
             // Trouver le code OTP valide
             $otp = Otp::findValidOtp($request->telephone, $request->code, $request->type);
 
             if (!$otp) {
+                Log::warning("Aucun OTP valide trouvé pour telephone={$request->telephone}, code={$request->code}, type={$request->type}");
                 return $this->errorResponse('Code OTP invalide ou expiré', 400);
             }
 
-            // Marquer le code comme utilisé
-            $otp->markAsUsed();
+            Log::info("OTP trouvé et valide: id={$otp->id}, expire_at={$otp->expire_at}");
 
             // Retourner les informations selon le type
             $data = [
@@ -106,27 +213,22 @@ class OtpController extends Controller
                 'verifie' => true,
             ];
 
-            // Pour l'inscription, créer l'utilisateur si nécessaire
-            if ($request->type === 'inscription') {
-                $user = User::where('telephone', $request->telephone)->first();
-                if ($user) {
-                    $data['utilisateur_existe'] = true;
-                    $data['utilisateur'] = $user;
-                } else {
-                    // Pour l'inscription, on ne crée pas l'utilisateur ici
-                    // Il sera créé lors de l'appel à /api/auth/register
-                    $data['utilisateur_existe'] = false;
-                    $data['utilisateur'] = null;
-                }
-            }
-
-            // Pour la connexion, retourner l'utilisateur avec token
-            if ($request->type === 'connexion') {
+            // Pour l'inscription et la connexion, retourner l'utilisateur avec token
+            if ($request->type === 'inscription' || $request->type === 'connexion') {
                 $user = User::where('telephone', $request->telephone)->first();
                 if ($user) {
                     $token = $user->createToken('OmPay')->accessToken;
                     $data['utilisateur'] = $user;
                     $data['token'] = $token;
+                    $data['utilisateur_existe'] = true;
+
+                    // Marquer le code comme utilisé seulement après succès
+                    $otp->markAsUsed();
+                } else {
+                    // Pour l'inscription, si l'utilisateur n'existe pas, c'est anormal
+                    // car il devrait être créé lors de register
+                    $data['utilisateur_existe'] = false;
+                    $data['utilisateur'] = null;
                 }
             }
 
