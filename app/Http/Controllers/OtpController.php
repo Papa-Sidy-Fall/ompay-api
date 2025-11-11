@@ -94,21 +94,33 @@ class OtpController extends Controller
 
             // Envoyer le SMS avec Twilio
             try {
-                $twilio = new Client(config('services.twilio.sid'), config('services.twilio.token'));
-                $message = "Votre code OTP OmPay est: {$code}. Valide jusqu'à {$expireAt->format('H:i')}.";
+                $twilioSid = config('services.twilio.sid');
+                $twilioToken = config('services.twilio.token');
+                $twilioFrom = config('services.twilio.from');
 
-                $twilio->messages->create(
-                    $request->telephone,
-                    [
-                        'from' => config('services.twilio.from'),
-                        'body' => $message
-                    ]
-                );
+                Log::info("Tentative envoi SMS sendOtp - SID: " . ($twilioSid ? 'Défini' : 'Non défini') . ", Token: " . ($twilioToken ? 'Défini' : 'Non défini') . ", From: {$twilioFrom}");
 
-                Log::info("Code OTP envoyé par SMS pour {$request->telephone} ({$request->type}): {$code}");
+                if (!$twilioSid || !$twilioToken || !$twilioFrom) {
+                    Log::error("Configuration Twilio incomplète dans sendOtp");
+                    Log::info("Code OTP (Twilio config failed) pour {$request->telephone} ({$request->type}): {$code}");
+                } else {
+                    $twilio = new Client($twilioSid, $twilioToken);
+                    $message = "Votre code OTP OmPay est: {$code}. Valide jusqu'à {$expireAt->format('H:i')}.";
+
+                    $sms = $twilio->messages->create(
+                        $request->telephone,
+                        [
+                            'from' => $twilioFrom,
+                            'body' => $message
+                        ]
+                    );
+
+                    Log::info("Code OTP envoyé par SMS pour {$request->telephone} ({$request->type}): {$code} (Message SID: {$sms->sid})");
+                }
             } catch (\Exception $e) {
                 // En développement, si Twilio échoue, on log juste le code
                 Log::warning("Échec envoi SMS Twilio pour {$request->telephone}: " . $e->getMessage());
+                Log::error("Détails Twilio sendOtp - SID: {$twilioSid}, From: {$twilioFrom}, To: {$request->telephone}");
                 Log::info("Code OTP (SMS failed) pour {$request->telephone} ({$request->type}): {$code}");
             }
 

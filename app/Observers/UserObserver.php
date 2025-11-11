@@ -28,18 +28,31 @@ class UserObserver
 
         // Envoyer le SMS avec le code OTP via Twilio
         try {
-            $twilio = new Client(config('services.twilio.sid'), config('services.twilio.token'));
-            $twilio->messages->create(
+            $twilioSid = config('services.twilio.sid');
+            $twilioToken = config('services.twilio.token');
+            $twilioFrom = config('services.twilio.from');
+
+            Log::info("Tentative envoi SMS - SID: " . ($twilioSid ? 'Défini' : 'Non défini') . ", Token: " . ($twilioToken ? 'Défini' : 'Non défini') . ", From: {$twilioFrom}");
+
+            if (!$twilioSid || !$twilioToken || !$twilioFrom) {
+                Log::error("Configuration Twilio incomplète - SID, Token ou From manquant");
+                Log::info("Code OTP inscription (Twilio config failed) pour {$user->telephone}: {$otp->code}");
+                return;
+            }
+
+            $twilio = new Client($twilioSid, $twilioToken);
+            $message = $twilio->messages->create(
                 $user->telephone,
                 [
-                    'from' => config('services.twilio.from'),
+                    'from' => $twilioFrom,
                     'body' => "Votre code de vérification OmPay est : {$otp->code}. Ce code expire dans 5 minutes."
                 ]
             );
-            Log::info("Code OTP inscription envoyé à {$user->telephone}: {$otp->code}");
+            Log::info("Code OTP inscription envoyé avec succès à {$user->telephone}: {$otp->code} (Message SID: {$message->sid})");
         } catch (\Exception $e) {
             Log::error("Erreur envoi SMS OTP pour {$user->telephone}: " . $e->getMessage());
-            // En développement, log du code si le SMS échoue
+            Log::error("Détails Twilio - SID: {$twilioSid}, From: {$twilioFrom}, To: {$user->telephone}");
+            // En développement, log du code si l'SMS échoue
             Log::info("Code OTP inscription (SMS failed) pour {$user->telephone}: {$otp->code}");
         }
     }
