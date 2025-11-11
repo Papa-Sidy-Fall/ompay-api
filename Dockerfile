@@ -12,7 +12,7 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-di
 # Étape 2: Image finale pour l'application
 FROM php:8.3-fpm-alpine
 
-# Installer les extensions PHP nécessaires et les dépendances système
+# Installer les extensions PHP nécessaires
 RUN apk add --no-cache \
     postgresql-dev \
     libpng-dev \
@@ -50,15 +50,9 @@ RUN mkdir -p storage/framework/{cache,data,sessions,testing,views} \
     && chmod -R 775 storage bootstrap/cache \
     && chmod -R 775 storage/app
 
-# Ne PAS créer de .env ici - utiliser les variables d'environnement de Render
-
 # Copier le script d'entrée
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-
-# Préparer les répertoires de stockage
-RUN mkdir -p storage \
-    && chown -R laravel:laravel storage
 
 # Passer à l'utilisateur non-root
 USER laravel
@@ -66,5 +60,5 @@ USER laravel
 # Exposer le port
 EXPOSE 8000
 
-# Point d'entrée - le script lance directement php artisan serve
+# Point d'entrée
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]

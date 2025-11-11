@@ -10,7 +10,7 @@ php artisan cache:clear
 php artisan route:clear
 php artisan view:clear
 
-# Attendre que la base de données soit prête avec une méthode compatible
+# Attendre que la base de données soit prête
 echo "⏳ Vérification de la connexion à la base de données..."
 MAX_TRIES=30
 COUNT=0
@@ -23,7 +23,6 @@ done
 if [ $COUNT -eq $MAX_TRIES ]; then
     echo "❌ Impossible de se connecter à la base de données après $MAX_TRIES tentatives"
     echo "Vérifiez vos variables d'environnement DB_*"
-    # Continue quand même pour voir les vraies erreurs dans les logs
 fi
 
 # Générer la clé si elle n'existe pas
@@ -34,23 +33,19 @@ fi
 
 # Exécuter les migrations
 echo "📊 Exécution des migrations..."
-php artisan migrate --force || echo "⚠️  Erreur lors des migrations"
+php artisan migrate --force || echo "⚠️ Erreur lors des migrations"
 
-# Installer Passport (clés de cryptage)
+# Installer Passport
 echo "🔐 Installation de Passport..."
 if [ ! -f "storage/oauth-private.key" ] || [ ! -f "storage/oauth-public.key" ]; then
     echo "Génération des clés Passport..."
     php artisan passport:keys --force
-else
-    echo "Clés Passport déjà existantes"
 fi
 
-# Créer les clients Passport si nécessaire
-echo "👥 Configuration des clients Passport..."
 php artisan passport:client --personal --no-interaction --name="Personal Access Client" || echo "Client personnel déjà existant"
 php artisan passport:client --password --no-interaction --name="Password Grant Client" || echo "Client password déjà existant"
 
-# Régénérer les caches en production
+# Optimisations production
 if [ "$APP_ENV" = "production" ]; then
     echo "⚡ Optimisation pour la production..."
     php artisan config:cache
@@ -63,7 +58,7 @@ else
     php artisan view:clear
 fi
 
-# Afficher les informations de démarrage
+# Informations de démarrage
 echo "✅ Application prête!"
 echo "📍 URL: $APP_URL"
 echo "🌍 Environnement: $APP_ENV"
