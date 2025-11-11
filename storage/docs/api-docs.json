@@ -470,6 +470,61 @@
           }
         }
       }
+    },
+    "/api/admin/reset-database": {
+      "get": {
+        "summary": "Reset de la base de données (ADMIN)",
+        "description": "⚠️ ENDPOINT DANGEREUX - Reset complet de la base de données avec migrations et seeders. À SUPPRIMER APRÈS USAGE !",
+        "tags": ["Administration"],
+        "parameters": [
+          {
+            "name": "secret",
+            "in": "query",
+            "required": true,
+            "description": "Clé secrète d'administration",
+            "schema": {
+              "type": "string",
+              "example": "ompay-admin-2025"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Base de données reset avec succès",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Base de données reset avec succès",
+                  "details": "Toutes les tables ont été recréées et les seeders exécutés"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès non autorisé",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": "Accès non autorisé",
+                  "message": "Clé secrète requise"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erreur lors du reset",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": "Erreur lors du reset",
+                  "message": "Détails de l'erreur"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
