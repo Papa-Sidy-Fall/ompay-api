@@ -54,8 +54,9 @@ RUN mkdir -p storage/framework/{cache,data,sessions,testing,views} \
 
 # Copier le script d'entrée en tant que root
 COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh \
-    && chown laravel:laravel /usr/local/bin/docker-entrypoint.sh
+RUN ls -la /usr/local/bin/docker-entrypoint.sh && \
+    chmod +x /usr/local/bin/docker-entrypoint.sh && \
+    chown root:root /usr/local/bin/docker-entrypoint.sh
 
 # Pré-générer les clés Passport (sera remplacé par le script d'entrée si nécessaire)
 RUN mkdir -p storage \
