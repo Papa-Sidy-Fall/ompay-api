@@ -44,7 +44,7 @@
                 "required": ["nom", "telephone", "pin"],
                 "properties": {
                   "nom": {"type": "string", "example": "Jean Dupont"},
-                  "telephone": {"type": "string", "example": "771234567"},
+                  "telephone": {"type": "string", "example": "+221+221771234567"},
                   "pin": {"type": "string", "example": "1234"}
                 }
               }
@@ -64,7 +64,7 @@
                       "id": 1,
                       "uuid": "550e8400-e29b-41d4-a716-446655440000",
                       "nom": "Jean Dupont",
-                      "telephone": "771234567"
+                      "telephone": "+221771234567"
                     },
                     "message_complementaire": "Un code OTP a été envoyé à votre téléphone pour finaliser l'inscription"
                   }
@@ -102,7 +102,7 @@
                 "type": "object",
                 "required": ["telephone", "pin"],
                 "properties": {
-                  "telephone": {"type": "string", "example": "771234567"},
+                  "telephone": {"type": "string", "example": "+221+221771234567"},
                   "pin": {"type": "string", "example": "1234"}
                 }
               }
@@ -122,7 +122,7 @@
                       "id": 1,
                       "uuid": "550e8400-e29b-41d4-a716-446655440000",
                       "nom": "Jean Dupont",
-                      "telephone": "771234567"
+                      "telephone": "+221771234567"
                     },
                     "message_complementaire": "Un code OTP a été envoyé à votre numéro de téléphone"
                   }
@@ -168,7 +168,7 @@
                 "type": "object",
                 "required": ["telephone", "code", "type"],
                 "properties": {
-                  "telephone": {"type": "string", "example": "771234567"},
+                  "telephone": {"type": "string", "example": "+221771234567"},
                   "code": {"type": "string", "example": "0939"},
                   "type": {"type": "string", "enum": ["inscription", "connexion", "transaction"]}
                 }
@@ -188,7 +188,7 @@
                       "succes": true,
                       "message": "Code OTP vérifié avec succès",
                       "donnees": {
-                        "telephone": "771234567",
+                        "telephone": "+221771234567",
                         "type": "inscription",
                         "verifie": true,
                         "utilisateur_existe": true,
@@ -196,7 +196,7 @@
                           "id": 7,
                           "uuid": "0549f1b0-2db1-4b9a-bf89-0ed594bb0bd0",
                           "nom": "Jean Dupont",
-                          "telephone": "771234567",
+                          "telephone": "+221771234567",
                           "email": null,
                           "qr_code": "iVBORw0KGgoAAAANSUhEUgAA...",
                           "created_at": "2025-11-11T11:47:37.000000Z",
@@ -212,14 +212,14 @@
                       "succes": true,
                       "message": "Code OTP vérifié avec succès",
                       "donnees": {
-                        "telephone": "771234567",
+                        "telephone": "+221771234567",
                         "type": "connexion",
                         "verifie": true,
                         "utilisateur": {
                           "id": 1,
                           "uuid": "550e8400-e29b-41d4-a716-446655440000",
                           "nom": "Jean Dupont",
-                          "telephone": "771234567",
+                          "telephone": "+221771234567",
                           "qr_code": "iVBORw0KGgoAAAANSUhEUgAA..."
                         },
                         "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."
@@ -282,7 +282,7 @@
                 "type": "object",
                 "required": ["telephone", "type"],
                 "properties": {
-                  "telephone": {"type": "string", "example": "771234567"},
+                  "telephone": {"type": "string", "example": "+221771234567"},
                   "type": {"type": "string", "enum": ["inscription", "connexion", "transaction"]}
                 }
               }
@@ -298,7 +298,7 @@
                   "succes": true,
                   "message": "Nouveau code OTP envoyé avec succès",
                   "donnees": {
-                    "telephone": "771234567",
+                    "telephone": "+221771234567",
                     "type": "connexion",
                     "expire_at": "2025-11-11T10:01:29.000000Z"
                   }
