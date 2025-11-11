@@ -1,0 +1,363 @@
+{
+  "info": {
+    "name": "OmPay API - Collection de test",
+    "description": "Collection Postman complète pour tester l'API OmPay",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "transaction_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Authentification",
+      "item": [
+        {
+          "name": "Inscription utilisateur",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Test User\",\n  \"telephone\": \"771157773\",\n  \"pin\": \"1234\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            },
+            "description": "Créer un nouveau compte utilisateur"
+          }
+        },
+        {
+          "name": "Connexion (envoi OTP)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"telephone\": \"771157773\",\n  \"pin\": \"1234\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Se connecter et recevoir un code OTP par SMS"
+          }
+        },
+        {
+          "name": "Vérifier code OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"telephone\": \"771157773\",\n  \"code\": \"0939\",\n  \"type\": \"connexion\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/otp/verify",
+              "host": ["{{base_url}}"],
+              "path": ["api", "otp", "verify"]
+            },
+            "description": "Vérifier le code OTP reçu par SMS. Récupérer le token dans les logs Laravel.",
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "if (pm.response.code === 200) {",
+                    "    const response = pm.response.json();",
+                    "    if (response.succes && response.donnees && response.donnees.token) {",
+                    "        pm.collectionVariables.set('token', response.donnees.token);",
+                    "        console.log('Token sauvegardé:', response.donnees.token);",
+                    "    }",
+                    "}"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "Renvoyer code OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"telephone\": \"771157773\",\n  \"type\": \"connexion\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/otp/resend",
+              "host": ["{{base_url}}"],
+              "path": ["api", "otp", "resend"]
+            },
+            "description": "Renvoyer un nouveau code OTP"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Transactions",
+      "item": [
+        {
+          "name": "Dépôt d'argent",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"montant\": 100.00,\n  \"description\": \"Dépôt initial\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/transactions/depot",
+              "host": ["{{base_url}}"],
+              "path": ["api", "transactions", "depot"]
+            },
+            "description": "Créditer le compte utilisateur"
+          }
+        },
+        {
+          "name": "Effectuer un paiement",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"montant\": 50.00,\n  \"description\": \"Paiement test\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/transactions/pay",
+              "host": ["{{base_url}}"],
+              "path": ["api", "transactions", "pay"]
+            },
+            "description": "Initier un paiement (nécessite confirmation OTP)",
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "if (pm.response.code === 200) {",
+                    "    const response = pm.response.json();",
+                    "    if (response.succes && response.donnees && response.donnees.transaction_id) {",
+                    "        pm.collectionVariables.set('transaction_id', response.donnees.transaction_id);",
+                    "        console.log('Transaction ID sauvegardé:', response.donnees.transaction_id);",
+                    "    }",
+                    "}"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "Confirmer transaction",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"transaction_id\": \"{{transaction_id}}\",\n  \"code\": \"0169\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/transactions/confirm",
+              "host": ["{{base_url}}"],
+              "path": ["api", "transactions", "confirm"]
+            },
+            "description": "Confirmer la transaction avec le code OTP (vérifier les logs Laravel pour le code)"
+          }
+        },
+        {
+          "name": "Effectuer un transfert",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"destinataire_uuid\": \"d4663ad3-9512-43d1-aa95-83ab84a0caf5\",\n  \"montant\": 25.00,\n  \"description\": \"Transfert test\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/transactions/transfert",
+              "host": ["{{base_url}}"],
+              "path": ["api", "transactions", "transfert"]
+            },
+            "description": "Transférer de l'argent vers un autre utilisateur"
+          }
+        },
+        {
+          "name": "Historique des transactions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/transactions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "transactions"]
+            },
+            "description": "Récupérer l'historique des transactions de l'utilisateur"
+          }
+        },
+        {
+          "name": "Détail d'une transaction",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/transactions/{{transaction_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "transactions", "{{transaction_id}}"]
+            },
+            "description": "Récupérer les détails d'une transaction spécifique"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Distributeurs",
+      "item": [
+        {
+          "name": "Liste des distributeurs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/distributeurs",
+              "host": ["{{base_url}}"],
+              "path": ["api", "distributeurs"]
+            },
+            "description": "Récupérer la liste des distributeurs disponibles"
+          }
+        }
+      ]
+    }
+  ]
+}
