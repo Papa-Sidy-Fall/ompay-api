@@ -15,6 +15,9 @@ class UserObserver
      */
     public function created(User $user): void
     {
+        // Générer le QR code pour l'utilisateur
+        $user->generateQrCode();
+
         // Générer et envoyer un code OTP pour l'inscription
         $otp = Otp::create([
             'telephone' => $user->telephone,

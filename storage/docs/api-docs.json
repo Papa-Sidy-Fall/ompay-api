@@ -194,6 +194,7 @@
                           "nom": "Jean Dupont",
                           "telephone": "771234567",
                           "email": null,
+                          "qr_code": "iVBORw0KGgoAAAANSUhEUgAA...",
                           "created_at": "2025-11-11T11:47:37.000000Z",
                           "updated_at": "2025-11-11T11:47:37.000000Z"
                         },
@@ -214,7 +215,8 @@
                           "id": 1,
                           "uuid": "550e8400-e29b-41d4-a716-446655440000",
                           "nom": "Jean Dupont",
-                          "telephone": "771234567"
+                          "telephone": "771234567",
+                          "qr_code": "iVBORw0KGgoAAAANSUhEUgAA..."
                         },
                         "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."
                       }
