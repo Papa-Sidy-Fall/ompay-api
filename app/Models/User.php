@@ -41,6 +41,7 @@ class User extends Authenticatable
         'nom',
         'telephone',
         'pin',
+        'statut',
         'qr_code',
     ];
 

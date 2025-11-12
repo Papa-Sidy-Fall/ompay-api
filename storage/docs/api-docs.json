@@ -392,22 +392,154 @@
         }
       }
     },
-    "/api/transactions/confirm": {
-      "post": {
-        "summary": "Confirmer une transaction",
-        "description": "Valide une transaction avec le code OTP",
-        "tags": ["Transactions"],
+    "/api/compte": {
+      "get": {
+        "summary": "Informations du compte",
+        "description": "Récupère les informations du compte utilisateur connecté",
+        "tags": ["Compte"],
         "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "Informations du compte",
+            "content": {
+              "application/json": {
+                "example": {
+                  "succes": true,
+                  "message": "Informations du compte récupérées avec succès",
+                  "donnees": {
+                    "utilisateur": {
+                      "id": 1,
+                      "nom": "Jean Dupont",
+                      "telephone": "+221771234567",
+                      "statut": "actif"
+                    },
+                    "solde": "150.00",
+                    "qr_code": "base64encoded..."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/compte/{id}/solde": {
+      "get": {
+        "summary": "Solde du compte",
+        "description": "Récupère uniquement le solde du compte",
+        "tags": ["Compte"],
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "integer"},
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Solde récupéré",
+            "content": {
+              "application/json": {
+                "example": {
+                  "succes": true,
+                  "message": "Solde récupéré avec succès",
+                  "donnees": {
+                    "solde": "150.00"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/compte/{id}/transaction": {
+      "post": {
+        "summary": "Créer une transaction",
+        "description": "Initie un paiement ou transfert avec confirmation OTP",
+        "tags": ["Compte"],
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "integer"},
+            "example": 1
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["transaction_id", "code"],
+                "required": ["type", "montant"],
                 "properties": {
-                  "transaction_id": {"type": "string", "example": "894fc500-b74d-4ede-891e-5f54b3f1ce6a"},
-                  "code": {"type": "string", "example": "0169"}
+                  "type": {"type": "string", "enum": ["payer", "transfert"]},
+                  "montant": {"type": "number", "example": 50.00},
+                  "numero_destinataire": {"type": "string", "example": "+221771234568"},
+                  "code_marchand": {"type": "string", "example": "MARCHAND123"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Transaction initiée",
+            "content": {
+              "application/json": {
+                "example": {
+                  "succes": true,
+                  "message": "Transaction initiée. Veuillez confirmer avec le code OTP envoyé.",
+                  "donnees": {
+                    "transaction_id": "uuid-here",
+                    "type": "payer",
+                    "montant": 50.00,
+                    "otp_required": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/compte/{id}/transaction/{transactionId}/confirm": {
+      "post": {
+        "summary": "Confirmer une transaction",
+        "description": "Confirme une transaction en attente avec le code OTP",
+        "tags": ["Compte"],
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "integer"},
+            "example": 1
+          },
+          {
+            "name": "transactionId",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "string"},
+            "example": "uuid-here"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["code"],
+                "properties": {
+                  "code": {"type": "string", "example": "1234"}
                 }
               }
             }
@@ -420,7 +552,74 @@
               "application/json": {
                 "example": {
                   "succes": true,
-                  "message": "Transaction confirmée avec succès"
+                  "message": "Transaction confirmée avec succès",
+                  "donnees": {
+                    "transaction": {
+                      "uuid": "uuid-here",
+                      "type": "payer",
+                      "montant": -50.00,
+                      "statut": "confirmee"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/compte/{id}/transactions": {
+      "get": {
+        "summary": "Historique des transactions",
+        "description": "Récupère l'historique des transactions avec pagination et filtrage",
+        "tags": ["Compte"],
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "integer"},
+            "example": 1
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {"type": "string", "enum": ["payer", "transfert", "depot"]},
+            "example": "payer"
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "schema": {"type": "integer", "default": 15},
+            "example": 10
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transactions récupérées",
+            "content": {
+              "application/json": {
+                "example": {
+                  "succes": true,
+                  "message": "Transactions récupérées avec succès",
+                  "donnees": {
+                    "transactions": [
+                      {
+                        "uuid": "uuid-here",
+                        "type": "payer",
+                        "montant": -50.00,
+                        "description": "Paiement",
+                        "created_at": "2025-11-12T00:00:00Z"
+                      }
+                    ],
+                    "pagination": {
+                      "current_page": 1,
+                      "per_page": 15,
+                      "total": 25,
+                      "last_page": 2
+                    }
+                  }
                 }
               }
             }

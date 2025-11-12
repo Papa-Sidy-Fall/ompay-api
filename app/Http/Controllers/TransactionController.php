@@ -102,37 +102,4 @@ class TransactionController extends Controller
         return $this->successResponse(['transaction' => $transaction]);
     }
 
-    /**
-     * Confirmer une transaction avec OTP
-     */
-    public function confirmTransaction(ConfirmTransactionRequest $request)
-    {
-        $user = $request->user();
-
-        // Vérifier le code OTP
-        $otp = Otp::findValidOtp($user->telephone, $request->code, 'transaction');
-
-        if (!$otp) {
-            return $this->errorResponse('Code OTP invalide ou expiré', 400);
-        }
-
-        // Marquer l'OTP comme utilisé
-        $otp->markAsUsed();
-
-        // Simulation : paiement confirmé (en production, récupérez les détails depuis cache/session)
-        $montant = 50.00;
-        $description = 'Paiement confirmé';
-
-        DB::transaction(function () use ($user, $montant, $description) {
-            Transaction::create([
-                'uuid' => Str::uuid()->toString(),
-                'utilisateur_uuid' => $user->uuid,
-                'type' => 'paiement',
-                'montant' => -$montant,
-                'description' => $description,
-            ]);
-        });
-
-        return $this->successResponse(null, 'Transaction confirmée avec succès');
-    }
 }

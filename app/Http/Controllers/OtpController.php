@@ -229,6 +229,11 @@ class OtpController extends Controller
             if ($request->type === 'inscription' || $request->type === 'connexion') {
                 $user = User::where('telephone', $request->telephone)->first();
                 if ($user) {
+                    // Pour l'inscription, activer le compte
+                    if ($request->type === 'inscription') {
+                        $user->update(['statut' => 'actif']);
+                    }
+
                     $token = $user->createToken('OmPay')->accessToken;
                     $data['utilisateur'] = $user;
                     $data['token'] = $token;

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CompteController;
 use App\Http\Controllers\DistributeurController;
 use App\Http\Controllers\OtpController;
 use App\Http\Controllers\TransactionController;
@@ -25,10 +26,17 @@ Route::post('/auth/login', [AuthController::class, 'login']);
 
 // Protected routes (nécessitent un token Bearer)
 Route::middleware('auth:api')->group(function () {
+    // Compte
+    Route::get('/compte', [CompteController::class, 'show']);
+    Route::get('/compte/{id}/solde', [CompteController::class, 'solde']);
+    Route::post('/compte/{id}/transaction', [CompteController::class, 'createTransaction']);
+    Route::post('/compte/{id}/transaction/{transactionId}/confirm', [CompteController::class, 'confirmTransaction']);
+    Route::get('/compte/{id}/transactions', [CompteController::class, 'transactions']);
+
+    // Anciens endpoints (maintenir pour compatibilité)
     Route::post('/transactions/pay', [TransactionController::class, 'pay']);
     Route::post('/transactions/transfert', [TransactionController::class, 'transfer']);
     Route::post('/transactions/depot', [DistributeurController::class, 'depot']);
-    Route::post('/transactions/confirm', [TransactionController::class, 'confirmTransaction']);
     Route::get('/transactions', [TransactionController::class, 'index']);
     Route::get('/transactions/{uuid}', [TransactionController::class, 'show']);
     Route::get('/distributeurs', [DistributeurController::class, 'index']);

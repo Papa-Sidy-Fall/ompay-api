@@ -83,18 +83,16 @@ class AuthController extends Controller
      */
     public function register(RegisterRequest $request)
     {
-        // Créer l'utilisateur complet (l'Observer enverra automatiquement l'OTP)
+        // Créer l'utilisateur avec statut inactif (l'Observer enverra automatiquement l'OTP)
         $user = User::create([
             'uuid' => Str::uuid()->toString(),
             'nom' => $request->nom,
             'telephone' => $request->telephone,
             'pin' => Hash::make($request->pin),
+            'statut' => 'inactif',
         ]);
 
-        return $this->successResponse([
-            'utilisateur' => $user,
-            'message_complementaire' => 'Un code OTP a été envoyé à votre téléphone pour finaliser l\'inscription'
-        ], 'Utilisateur créé avec succès. Vérifiez votre téléphone pour le code OTP.', 201);
+        return $this->successResponse(null, 'Un code OTP a été envoyé à votre téléphone pour finaliser l\'inscription.', 201);
     }
 
     /**
@@ -167,15 +165,8 @@ class AuthController extends Controller
             'type' => 'connexion'
         ]);
 
-        $otpResponse = $otpController->sendOtp($sendOtpRequest);
+        $otpController->sendOtp($sendOtpRequest);
 
-        if ($otpResponse->getStatusCode() !== 200) {
-            return $this->errorResponse('Erreur lors de l\'envoi du code OTP', 500);
-        }
-
-        return $this->successResponse([
-            'utilisateur' => $user,
-            'message_complementaire' => 'Un code OTP a été envoyé à votre numéro de téléphone'
-        ], 'Veuillez vérifier votre téléphone avec le code OTP');
+        return $this->successResponse(null, 'Un code OTP a été envoyé à votre numéro de téléphone');
     }
 }
