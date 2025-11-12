@@ -225,7 +225,7 @@ class OtpController extends Controller
                 'verifie' => true,
             ];
 
-            // Pour l'inscription et la connexion, retourner l'utilisateur avec token
+            // Pour l'inscription et la connexion, retourner seulement le token et le type
             if ($request->type === 'inscription' || $request->type === 'connexion') {
                 $user = User::where('telephone', $request->telephone)->first();
                 if ($user) {
@@ -235,17 +235,15 @@ class OtpController extends Controller
                     }
 
                     $token = $user->createToken('OmPay')->accessToken;
-                    $data['utilisateur'] = $user;
                     $data['token'] = $token;
-                    $data['utilisateur_existe'] = true;
+                    $data['type'] = $request->type;
 
                     // Marquer le code comme utilisé seulement après succès
                     $otp->markAsUsed();
                 } else {
                     // Pour l'inscription, si l'utilisateur n'existe pas, c'est anormal
                     // car il devrait être créé lors de register
-                    $data['utilisateur_existe'] = false;
-                    $data['utilisateur'] = null;
+                    return $this->errorResponse('Utilisateur non trouvé', 404);
                 }
             }
 
