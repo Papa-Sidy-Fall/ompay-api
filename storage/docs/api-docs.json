@@ -458,8 +458,8 @@
     },
     "/api/compte/{id}/transaction": {
       "post": {
-        "summary": "Créer une transaction",
-        "description": "Initie un paiement ou transfert avec confirmation OTP",
+        "summary": "Effectuer une transaction",
+        "description": "Effectue immédiatement un paiement ou transfert",
         "tags": ["Compte"],
         "security": [{"bearerAuth": []}],
         "parameters": [
@@ -490,76 +490,16 @@
         },
         "responses": {
           "200": {
-            "description": "Transaction initiée",
+            "description": "Transaction effectuée",
             "content": {
               "application/json": {
                 "example": {
                   "succes": true,
-                  "message": "Transaction initiée. Veuillez confirmer avec le code OTP envoyé.",
+                  "message": "Transaction effectuée avec succès.",
                   "donnees": {
-                    "transaction_id": "uuid-here",
                     "type": "payer",
                     "montant": 50.00,
-                    "otp_required": true
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/compte/{id}/transaction/{transactionId}/confirm": {
-      "post": {
-        "summary": "Confirmer une transaction",
-        "description": "Confirme une transaction en attente avec le code OTP",
-        "tags": ["Compte"],
-        "security": [{"bearerAuth": []}],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {"type": "integer"},
-            "example": 1
-          },
-          {
-            "name": "transactionId",
-            "in": "path",
-            "required": true,
-            "schema": {"type": "string"},
-            "example": "uuid-here"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["code"],
-                "properties": {
-                  "code": {"type": "string", "example": "1234"}
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Transaction confirmée",
-            "content": {
-              "application/json": {
-                "example": {
-                  "succes": true,
-                  "message": "Transaction confirmée avec succès",
-                  "donnees": {
-                    "transaction": {
-                      "uuid": "uuid-here",
-                      "type": "payer",
-                      "montant": -50.00,
-                      "statut": "confirmee"
-                    }
+                    "nouveau_solde": "150.00"
                   }
                 }
               }

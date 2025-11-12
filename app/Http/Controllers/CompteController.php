@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Transaction;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CompteController extends Controller
 {
@@ -66,78 +67,46 @@ class CompteController extends Controller
             return $this->errorResponse('Solde insuffisant', 400);
         }
 
-        // Générer et envoyer OTP pour la transaction
-        $otpController = app(OtpController::class);
-        $sendOtpRequest = new \App\Http\Requests\SendOtpRequest();
-        $sendOtpRequest->merge([
-            'telephone' => $user->telephone,
-            'type' => 'transaction'
-        ]);
+        // Pour les transferts, vérifier que le destinataire existe
+        $destinataire = null;
+        if ($request->type === 'transfert') {
+            $destinataire = User::where('telephone', $request->numero_destinataire)->first();
+            if (!$destinataire) {
+                return $this->errorResponse('Destinataire non trouvé', 404);
+            }
+        }
 
-        $otpController->sendOtp($sendOtpRequest);
+        // Exécuter la transaction immédiatement
+        DB::transaction(function () use ($user, $request, $destinataire) {
+            // Créer la transaction
+            Transaction::create([
+                'uuid' => \Illuminate\Support\Str::uuid()->toString(),
+                'utilisateur_uuid' => $user->uuid,
+                'type' => $request->type,
+                'montant' => -$request->montant,
+                'destinataire_uuid' => $destinataire?->uuid,
+                'description' => $request->type === 'transfert' ? 'Transfert' : 'Paiement marchand',
+                'statut' => 'confirmee',
+            ]);
 
-        // Créer la transaction en attente
-        $transaction = Transaction::create([
-            'uuid' => \Illuminate\Support\Str::uuid()->toString(),
-            'utilisateur_uuid' => $user->uuid,
-            'type' => $request->type,
-            'montant' => $request->type === 'transfert' ? -$request->montant : -$request->montant,
-            'destinataire_uuid' => $request->type === 'transfert' ? User::where('telephone', $request->numero_destinataire)->first()?->uuid : null,
-            'description' => $request->type === 'transfert' ? 'Transfert' : 'Paiement marchand',
-            'statut' => 'en_attente',
-        ]);
+            // Pour les transferts, créditer le destinataire
+            if ($request->type === 'transfert' && $destinataire) {
+                Transaction::create([
+                    'uuid' => \Illuminate\Support\Str::uuid()->toString(),
+                    'utilisateur_uuid' => $destinataire->uuid,
+                    'type' => 'depot',
+                    'montant' => $request->montant,
+                    'description' => 'Transfert reçu',
+                    'statut' => 'confirmee',
+                ]);
+            }
+        });
 
         return $this->successResponse([
-            'transaction_id' => $transaction->uuid,
             'type' => $request->type,
             'montant' => $request->montant,
-            'otp_required' => true,
-        ], 'Transaction initiée. Veuillez confirmer avec le code OTP envoyé.');
-    }
-
-    /**
-     * Confirmer une transaction avec OTP
-     */
-    public function confirmTransaction(Request $request, $id, $transactionId)
-    {
-        $user = $request->user();
-
-        // Validation
-        $request->validate([
-            'code' => 'required|string|size:4',
-        ]);
-
-        // Vérifier que l'utilisateur confirme sa propre transaction
-        if ($user->id != $id) {
-            return $this->errorResponse('Accès non autorisé', 403);
-        }
-
-        // Trouver la transaction en attente
-        $transaction = Transaction::where('uuid', $transactionId)
-            ->where('utilisateur_uuid', $user->uuid)
-            ->where('statut', 'en_attente')
-            ->first();
-
-        if (!$transaction) {
-            return $this->errorResponse('Transaction non trouvée ou déjà confirmée', 404);
-        }
-
-        // Vérifier le code OTP
-        $otp = \App\Models\Otp::findValidOtp($user->telephone, $request->code, 'transaction');
-
-        if (!$otp) {
-            return $this->errorResponse('Code OTP invalide ou expiré', 400);
-        }
-
-        // Marquer l'OTP comme utilisé
-        $otp->markAsUsed();
-
-        // Confirmer la transaction
-        $transaction->update(['statut' => 'confirmee']);
-
-        return $this->successResponse([
-            'transaction' => $transaction,
-        ], 'Transaction confirmée avec succès');
+            'nouveau_solde' => $user->fresh()->solde,
+        ], 'Transaction effectuée avec succès.');
     }
 
     /**
