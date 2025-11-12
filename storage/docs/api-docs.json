@@ -642,6 +642,61 @@
           }
         }
       }
+    },
+    "/api/admin/reset-passport": {
+      "get": {
+        "summary": "Réinstaller Passport (TEST UNIQUEMENT)",
+        "description": "🚨 ENDPOINT DE TEST DANGEREUX - Réinstalle Passport après reset DB. PROTÉGÉ mais À SUPPRIMER APRÈS TESTS !",
+        "tags": ["Administration"],
+        "parameters": [
+          {
+            "name": "secret",
+            "in": "query",
+            "required": true,
+            "description": "Clé secrète de test (changez-la !)",
+            "schema": {
+              "type": "string",
+              "example": "ompay-admin-2025-test-only"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Passport réinstallé avec succès",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Passport réinstallé avec succès",
+                  "warning": "⚠️ CET ENDPOINT DOIT ÊTRE SUPPRIMÉ APRÈS LES TESTS !"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès non autorisé",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": "Accès non autorisé",
+                  "message": "Secret requis ou environnement non autorisé"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erreur lors de la réinstallation",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": "Erreur lors de la réinstallation",
+                  "message": "Détails de l'erreur"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

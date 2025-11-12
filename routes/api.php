@@ -5,6 +5,7 @@ use App\Http\Controllers\CompteController;
 use App\Http\Controllers\DistributeurController;
 use App\Http\Controllers\OtpController;
 use App\Http\Controllers\TransactionController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -129,4 +130,45 @@ Route::get('/documentation', function () {
     }
 
     return response()->json(['error' => 'Documentation not found'], 404);
+});
+
+// ENDPOINT DE TEST UNIQUEMENT - À SUPPRIMER APRÈS TESTS !
+Route::get('/admin/reset-passport', function (Request $request) {
+    // PROTECTIONS MAXIMALES POUR TESTS UNIQUEMENT
+    $secret = $request->query('secret');
+
+    // Vérifier le secret (changez-le !)
+    if ($secret !== 'ompay-admin-2025-test-only') {
+        return response()->json([
+            'error' => 'Accès non autorisé',
+            'message' => 'Secret requis pour cette opération dangereuse'
+        ], 403);
+    }
+
+    // Vérifier que c'est un environnement de développement/test
+    if (!app()->environment(['local', 'testing'])) {
+        return response()->json([
+            'error' => 'Opération interdite',
+            'message' => 'Cette opération n\'est autorisée qu\'en développement'
+        ], 403);
+    }
+
+    try {
+        // Réinstaller Passport
+        \Illuminate\Support\Facades\Artisan::call('passport:install', [
+            '--force' => true
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Passport réinstallé avec succès',
+            'warning' => '⚠️ CET ENDPOINT DOIT ÊTRE SUPPRIMÉ APRÈS LES TESTS !'
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Erreur lors de la réinstallation',
+            'message' => $e->getMessage()
+        ], 500);
+    }
 });
