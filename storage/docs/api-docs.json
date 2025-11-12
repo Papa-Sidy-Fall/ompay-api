@@ -327,49 +327,6 @@
         }
       }
     },
-    "/api/transactions/pay": {
-      "post": {
-        "summary": "Effectuer un paiement",
-        "description": "Initie un paiement nécessitant confirmation OTP",
-        "tags": ["Transactions"],
-        "security": [{"bearerAuth": []}],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["montant"],
-                "properties": {
-                  "montant": {"type": "number", "example": 50.00},
-                  "description": {"type": "string", "example": "Paiement test"}
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Code OTP envoyé pour confirmation",
-            "content": {
-              "application/json": {
-                "example": {
-                  "succes": true,
-                  "message": "Code OTP envoyé pour confirmer la transaction",
-                  "donnees": {
-                    "transaction_id": "894fc500-b74d-4ede-891e-5f54b3f1ce6a",
-                    "montant": 50,
-                    "description": "Paiement test",
-                    "otp_required": true,
-                    "expire_at": "2025-11-11T09:56:29.000000Z"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/compte": {
       "get": {
         "summary": "Informations du compte",
@@ -471,13 +428,32 @@
             "description": "Transaction effectuée",
             "content": {
               "application/json": {
-                "example": {
-                  "succes": true,
-                  "message": "Transaction effectuée avec succès.",
-                  "donnees": {
-                    "type": "payer",
-                    "montant": 50.00,
-                    "nouveau_solde": "150.00"
+                "examples": {
+                  "paiement": {
+                    "summary": "Paiement marchand",
+                    "value": {
+                      "succes": true,
+                      "message": "Transaction effectuée avec succès.",
+                      "donnees": {
+                        "type": "payer",
+                        "montant": 50.00,
+                        "code_marchand": "ORANGE123",
+                        "nouveau_solde": "150.00"
+                      }
+                    }
+                  },
+                  "transfert": {
+                    "summary": "Transfert d'argent",
+                    "value": {
+                      "succes": true,
+                      "message": "Transaction effectuée avec succès.",
+                      "donnees": {
+                        "type": "transfert",
+                        "montant": 25.00,
+                        "numero_destinataire": "+221771234568",
+                        "nouveau_solde": "175.00"
+                      }
+                    }
                   }
                 }
               }
@@ -537,49 +513,6 @@
                       "total": 25,
                       "last_page": 2
                     }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/transactions": {
-      "get": {
-        "summary": "Historique des transactions",
-        "description": "Récupère l'historique des transactions de l'utilisateur",
-        "tags": ["Transactions"],
-        "security": [{"bearerAuth": []}],
-        "responses": {
-          "200": {
-            "description": "Liste des transactions",
-            "content": {
-              "application/json": {
-                "example": {
-                  "succes": true,
-                  "message": "Opération réussie",
-                  "donnees": {
-                    "transactions": [
-                      {
-                        "uuid": "bd86a2fa-99f4-4cbe-b5c7-75940c2df23e",
-                        "utilisateur_uuid": "d4663ad3-9512-43d1-aa95-83ab84a0caf5",
-                        "type": "paiement",
-                        "montant": "-50.00",
-                        "destinataire_uuid": null,
-                        "description": "Paiement confirmé",
-                        "created_at": "2025-11-11T09:53:24.000000Z"
-                      },
-                      {
-                        "uuid": "ec266bd9-94a9-41d3-bfbb-f6e3f895feb5",
-                        "utilisateur_uuid": "d4663ad3-9512-43d1-aa95-83ab84a0caf5",
-                        "type": "depot",
-                        "montant": "100.00",
-                        "destinataire_uuid": null,
-                        "description": "Dépôt initial",
-                        "created_at": "2025-11-11T09:48:08.000000Z"
-                      }
-                    ]
                   }
                 }
               }
