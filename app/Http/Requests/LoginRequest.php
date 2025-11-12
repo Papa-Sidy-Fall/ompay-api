@@ -22,7 +22,7 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'telephone' => 'required|string|regex:/^\+?[1-9]\d{1,14}$/',
+            'telephone' => 'required|string|regex:/^\+[1-9]\d{1,14}$/',
             'pin' => 'required|string',
         ];
     }

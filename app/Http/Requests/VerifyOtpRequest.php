@@ -22,7 +22,7 @@ class VerifyOtpRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'telephone' => 'required|string|regex:/^\+?[1-9]\d{1,14}$/',
+            'telephone' => 'required|string|regex:/^\+[1-9]\d{1,14}$/',
             'code' => 'required|string|size:4',
             'type' => 'required|in:inscription,connexion,transaction',
         ];

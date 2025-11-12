@@ -23,7 +23,7 @@ class RegisterRequest extends FormRequest
     {
         return [
             'nom' => 'required|string|max:255',
-            'telephone' => 'required|string|unique:users|regex:/^\+?[1-9]\d{1,14}$/',
+            'telephone' => 'required|string|unique:users|regex:/^\+[1-9]\d{1,14}$/',
             'pin' => 'required|string|min:4|max:6',
         ];
     }

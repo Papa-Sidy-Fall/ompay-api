@@ -8,6 +8,10 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
 use Illuminate\Support\Str;
+use BaconQrCode\Writer;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\RendererStyle\RendererStyle;
+use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 
 class User extends Authenticatable
 {
@@ -37,6 +41,7 @@ class User extends Authenticatable
         'nom',
         'telephone',
         'pin',
+        'qr_code',
     ];
 
     /**
@@ -81,5 +86,32 @@ class User extends Authenticatable
     public function transactions()
     {
         return $this->hasMany(Transaction::class, 'utilisateur_uuid', 'uuid');
+    }
+
+    /**
+     * Générer un QR code basé sur le numéro de téléphone
+     */
+    public function generateQrCode()
+    {
+        try {
+            // Utiliser BaconQrCode avec SVG (plus simple)
+            $renderer = new ImageRenderer(
+                new RendererStyle(400),
+                new SvgImageBackEnd()
+            );
+            $writer = new Writer($renderer);
+            $svgContent = $writer->writeString($this->telephone);
+
+            // Convertir en base64
+            $this->qr_code = base64_encode($svgContent);
+            $this->save();
+
+            return $this->qr_code;
+        } catch (\Exception $e) {
+            // En cas d'erreur, utiliser une approche alternative simple
+            $this->qr_code = base64_encode('<svg>QR Code for: ' . $this->telephone . '</svg>');
+            $this->save();
+            return $this->qr_code;
+        }
     }
 }

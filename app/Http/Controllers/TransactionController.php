@@ -31,20 +31,13 @@ class TransactionController extends Controller
         }
 
         // Générer et envoyer un code OTP pour la transaction
-        $otp = Otp::create([
-            'telephone' => $user->telephone,
-            'code' => Otp::generateCode(),
-            'type' => 'transaction',
-            'expire_at' => Carbon::now()->addMinutes(5),
-        ]);
-
-        // Envoyer le SMS avec le code OTP
         $otpController = app(OtpController::class);
         $sendOtpRequest = new SendOtpRequest();
         $sendOtpRequest->merge([
             'telephone' => $user->telephone,
             'type' => 'transaction'
         ]);
+
         $otpController->sendOtp($sendOtpRequest);
 
         return $this->successResponse([
@@ -52,7 +45,7 @@ class TransactionController extends Controller
             'montant' => $request->montant,
             'description' => $request->description,
             'otp_required' => true,
-            'expire_at' => $otp->expire_at->toISOString(),
+            'expire_at' => Carbon::now()->addMinutes(5)->toISOString(),
         ], 'Code OTP envoyé pour confirmer la transaction');
     }
 
@@ -70,20 +63,13 @@ class TransactionController extends Controller
         }
 
         // Générer et envoyer un code OTP pour la transaction
-        $otp = Otp::create([
-            'telephone' => $user->telephone,
-            'code' => Otp::generateCode(),
-            'type' => 'transaction',
-            'expire_at' => Carbon::now()->addMinutes(5),
-        ]);
-
-        // Envoyer le SMS avec le code OTP
         $otpController = app(OtpController::class);
         $sendOtpRequest = new SendOtpRequest();
         $sendOtpRequest->merge([
             'telephone' => $user->telephone,
             'type' => 'transaction'
         ]);
+
         $otpController->sendOtp($sendOtpRequest);
 
         return $this->successResponse([
@@ -92,7 +78,7 @@ class TransactionController extends Controller
             'destinataire_uuid' => $request->destinataire_uuid,
             'description' => $request->description,
             'otp_required' => true,
-            'expire_at' => $otp->expire_at->toISOString(),
+            'expire_at' => Carbon::now()->addMinutes(5)->toISOString(),
         ], 'Code OTP envoyé pour confirmer la transaction');
     }
 
