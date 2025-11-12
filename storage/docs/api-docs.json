@@ -43,7 +43,7 @@
                 "type": "object",
                 "required": ["nom", "telephone", "pin"],
                 "properties": {
-                  "nom": {"type": "string", "example": "Jean Dupont"},
+                  "nom": {"type": "string", "example": "Papa Sidy Fall"},
                   "telephone": {"type": "string", "example": "+221+221771234567"},
                   "pin": {"type": "string", "example": "1234"}
                 }
@@ -63,7 +63,7 @@
                     "utilisateur": {
                       "id": 1,
                       "uuid": "550e8400-e29b-41d4-a716-446655440000",
-                      "nom": "Jean Dupont",
+                      "nom": "Papa Sidy Fall",
                       "telephone": "+221771234567"
                     },
                     "message_complementaire": "Un code OTP a été envoyé à votre téléphone pour finaliser l'inscription"
@@ -121,7 +121,7 @@
                     "utilisateur": {
                       "id": 1,
                       "uuid": "550e8400-e29b-41d4-a716-446655440000",
-                      "nom": "Jean Dupont",
+                      "nom": "Papa Sidy Fall",
                       "telephone": "+221771234567"
                     },
                     "message_complementaire": "Un code OTP a été envoyé à votre numéro de téléphone"
@@ -387,7 +387,7 @@
                   "donnees": {
                     "utilisateur": {
                       "id": 1,
-                      "nom": "Jean Dupont",
+                      "nom": "Papa Sidy Fall",
                       "telephone": "+221771234567",
                       "statut": "actif"
                     },

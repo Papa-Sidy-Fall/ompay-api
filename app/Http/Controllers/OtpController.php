@@ -167,7 +167,7 @@ class OtpController extends Controller
      *                 @OA\Property(property="utilisateur", type="object",
      *                     @OA\Property(property="id", type="integer", example=1),
      *                     @OA\Property(property="uuid", type="string", example="550e8400-e29b-41d4-a716-446655440000"),
-     *                     @OA\Property(property="nom", type="string", example="Jean Dupont"),
+     *                     @OA\Property(property="nom", type="string", example="Papa Sidy Fall"),
      *                     @OA\Property(property="telephone", type="string", example="771234567")
      *                 ),
      *                 @OA\Property(property="token", type="string", example="eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9...", description="Token JWT pour l'authentification (uniquement pour connexion)")

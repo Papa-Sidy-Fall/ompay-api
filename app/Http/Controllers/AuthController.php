@@ -46,7 +46,7 @@ class AuthController extends Controller
      *         required=true,
      *         @OA\JsonContent(
      *             required={"nom","telephone","pin"},
-     *             @OA\Property(property="nom", type="string", example="Jean Dupont", description="Nom de l'utilisateur"),
+     *             @OA\Property(property="nom", type="string", example="Papa Sidy Fall", description="Nom de l'utilisateur"),
      *             @OA\Property(property="telephone", type="string", example="771234567", description="Numéro de téléphone"),
      *             @OA\Property(property="pin", type="string", example="1234", description="Code PIN à 4 chiffres")
      *         )
@@ -61,7 +61,7 @@ class AuthController extends Controller
      *                 @OA\Property(property="utilisateur", type="object",
      *                     @OA\Property(property="id", type="integer", example=1),
      *                     @OA\Property(property="uuid", type="string", example="550e8400-e29b-41d4-a716-446655440000"),
-     *                     @OA\Property(property="nom", type="string", example="Jean Dupont"),
+     *                     @OA\Property(property="nom", type="string", example="Papa Sidy Fall"),
      *                     @OA\Property(property="telephone", type="string", example="771234567")
      *                 ),
      *                 @OA\Property(property="message_complementaire", type="string", example="Un code OTP a été envoyé à votre téléphone pour finaliser l'inscription")
@@ -120,7 +120,7 @@ class AuthController extends Controller
      *                 @OA\Property(property="utilisateur", type="object",
      *                     @OA\Property(property="id", type="integer", example=1),
      *                     @OA\Property(property="uuid", type="string", example="550e8400-e29b-41d4-a716-446655440000"),
-     *                     @OA\Property(property="nom", type="string", example="Jean Dupont"),
+     *                     @OA\Property(property="nom", type="string", example="Papa Sidy Fall"),
      *                     @OA\Property(property="telephone", type="string", example="771234567")
      *                 ),
      *                 @OA\Property(property="message_complementaire", type="string", example="Un code OTP a été envoyé à votre numéro de téléphone")
