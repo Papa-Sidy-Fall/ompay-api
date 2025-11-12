@@ -30,7 +30,8 @@ Route::middleware('auth:api')->group(function () {
     // Compte
     Route::get('/compte', [CompteController::class, 'show']);
     Route::get('/compte/{id}/solde', [CompteController::class, 'solde']);
-    Route::post('/compte/{id}/transaction', [CompteController::class, 'createTransaction']);
+    Route::post('/compte/{id}/payer', [CompteController::class, 'payer']);
+    Route::post('/compte/{id}/transfert', [CompteController::class, 'transfert']);
     Route::get('/compte/{id}/transactions', [CompteController::class, 'transactions']);
 
     // Anciens endpoints (maintenir pour compatibilité)

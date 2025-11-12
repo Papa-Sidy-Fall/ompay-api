@@ -391,10 +391,10 @@
         }
       }
     },
-    "/api/compte/{id}/transaction": {
+    "/api/compte/{id}/payer": {
       "post": {
-        "summary": "Effectuer une transaction",
-        "description": "Effectue immédiatement un paiement ou transfert",
+        "summary": "Effectuer un paiement marchand",
+        "description": "Effectue immédiatement un paiement vers un marchand",
         "tags": ["Compte"],
         "security": [{"bearerAuth": []}],
         "parameters": [
@@ -412,12 +412,10 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["type", "montant"],
+                "required": ["montant", "code_marchand"],
                 "properties": {
-                  "type": {"type": "string", "enum": ["payer", "transfert"]},
                   "montant": {"type": "number", "example": 50.00},
-                  "numero_destinataire": {"type": "string", "example": "+221771234568"},
-                  "code_marchand": {"type": "string", "example": "MARCHAND123"}
+                  "code_marchand": {"type": "string", "example": "ORANGE123"}
                 }
               }
             }
@@ -425,36 +423,126 @@
         },
         "responses": {
           "200": {
-            "description": "Transaction effectuée",
+            "description": "Paiement effectué",
+            "content": {
+              "application/json": {
+                "example": {
+                  "succes": true,
+                  "message": "Paiement effectué avec succès.",
+                  "donnees": {
+                    "type": "payer",
+                    "montant": 50.00,
+                    "marchand": "Orange Money",
+                    "nouveau_solde": "150.00"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solde insuffisant",
+            "content": {
+              "application/json": {
+                "example": {
+                  "succes": false,
+                  "message": "Solde insuffisant"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Marchand non trouvé",
+            "content": {
+              "application/json": {
+                "example": {
+                  "succes": false,
+                  "message": "Marchand non trouvé ou inactif"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/compte/{id}/transfert": {
+      "post": {
+        "summary": "Effectuer un transfert d'argent",
+        "description": "Effectue immédiatement un transfert vers un autre utilisateur",
+        "tags": ["Compte"],
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "integer"},
+            "example": 1
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["montant", "numero_destinataire"],
+                "properties": {
+                  "montant": {"type": "number", "example": 25.00},
+                  "numero_destinataire": {"type": "string", "example": "+221771234568"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Transfert effectué",
+            "content": {
+              "application/json": {
+                "example": {
+                  "succes": true,
+                  "message": "Transfert effectué avec succès.",
+                  "donnees": {
+                    "type": "transfert",
+                    "montant": 25.00,
+                    "destinataire": "Destinataire Test",
+                    "numero_destinataire": "+221771234568",
+                    "nouveau_solde": "175.00"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Erreur de validation",
             "content": {
               "application/json": {
                 "examples": {
-                  "paiement": {
-                    "summary": "Paiement marchand",
+                  "solde_insuffisant": {
+                    "summary": "Solde insuffisant",
                     "value": {
-                      "succes": true,
-                      "message": "Transaction effectuée avec succès.",
-                      "donnees": {
-                        "type": "payer",
-                        "montant": 50.00,
-                        "code_marchand": "ORANGE123",
-                        "nouveau_solde": "150.00"
-                      }
+                      "succes": false,
+                      "message": "Solde insuffisant"
                     }
                   },
-                  "transfert": {
-                    "summary": "Transfert d'argent",
+                  "transfert_soi": {
+                    "summary": "Transfert vers soi-même",
                     "value": {
-                      "succes": true,
-                      "message": "Transaction effectuée avec succès.",
-                      "donnees": {
-                        "type": "transfert",
-                        "montant": 25.00,
-                        "numero_destinataire": "+221771234568",
-                        "nouveau_solde": "175.00"
-                      }
+                      "succes": false,
+                      "message": "Impossible de transférer vers soi-même"
                     }
                   }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Destinataire non trouvé",
+            "content": {
+              "application/json": {
+                "example": {
+                  "succes": false,
+                  "message": "Destinataire non trouvé ou inactif"
                 }
               }
             }

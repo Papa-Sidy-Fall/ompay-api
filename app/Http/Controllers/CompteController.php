@@ -48,18 +48,16 @@ class CompteController extends Controller
     }
 
     /**
-     * Créer une transaction (paiement ou transfert)
+     * Effectuer un paiement marchand
      */
-    public function createTransaction(Request $request, $id)
+    public function payer(Request $request, $id)
     {
         $user = $request->user();
 
         // Validation
         $request->validate([
-            'type' => 'required|in:payer,transfert',
             'montant' => 'required|numeric|min:0.01',
-            'numero_destinataire' => 'required_if:type,transfert|string',
-            'code_marchand' => 'required_if:type,payer|string',
+            'code_marchand' => 'required|string',
         ]);
 
         // Vérifier le solde
@@ -67,46 +65,99 @@ class CompteController extends Controller
             return $this->errorResponse('Solde insuffisant', 400);
         }
 
-        // Pour les transferts, vérifier que le destinataire existe
-        $destinataire = null;
-        if ($request->type === 'transfert') {
-            $destinataire = User::where('telephone', $request->numero_destinataire)->first();
-            if (!$destinataire) {
-                return $this->errorResponse('Destinataire non trouvé', 404);
-            }
+        // Vérifier que le marchand existe
+        $marchand = DB::table('marchands')
+            ->where('code_marchand', $request->code_marchand)
+            ->where('statut', 'actif')
+            ->first();
+
+        if (!$marchand) {
+            return $this->errorResponse('Marchand non trouvé ou inactif', 404);
         }
 
-        // Exécuter la transaction immédiatement
-        DB::transaction(function () use ($user, $request, $destinataire) {
-            // Créer la transaction
+        // Exécuter le paiement immédiatement
+        DB::transaction(function () use ($user, $request, $marchand) {
             Transaction::create([
                 'uuid' => \Illuminate\Support\Str::uuid()->toString(),
                 'utilisateur_uuid' => $user->uuid,
-                'type' => $request->type,
+                'type' => 'payer',
                 'montant' => -$request->montant,
-                'destinataire_uuid' => $destinataire?->uuid,
-                'description' => $request->type === 'transfert' ? 'Transfert' : 'Paiement marchand',
+                'description' => 'Paiement marchand - ' . $marchand->nom,
                 'statut' => 'confirmee',
             ]);
-
-            // Pour les transferts, créditer le destinataire
-            if ($request->type === 'transfert' && $destinataire) {
-                Transaction::create([
-                    'uuid' => \Illuminate\Support\Str::uuid()->toString(),
-                    'utilisateur_uuid' => $destinataire->uuid,
-                    'type' => 'depot',
-                    'montant' => $request->montant,
-                    'description' => 'Transfert reçu',
-                    'statut' => 'confirmee',
-                ]);
-            }
         });
 
         return $this->successResponse([
-            'type' => $request->type,
+            'type' => 'payer',
             'montant' => $request->montant,
+            'marchand' => $marchand->nom,
             'nouveau_solde' => $user->fresh()->solde,
-        ], 'Transaction effectuée avec succès.');
+        ], 'Paiement effectué avec succès.');
+    }
+
+    /**
+     * Effectuer un transfert d'argent
+     */
+    public function transfert(Request $request, $id)
+    {
+        $user = $request->user();
+
+        // Validation
+        $request->validate([
+            'montant' => 'required|numeric|min:0.01',
+            'numero_destinataire' => 'required|string',
+        ]);
+
+        // Vérifier le solde
+        if ($user->solde < $request->montant) {
+            return $this->errorResponse('Solde insuffisant', 400);
+        }
+
+        // Vérifier que le destinataire existe et est actif
+        $destinataire = User::where('telephone', $request->numero_destinataire)
+            ->where('statut', 'actif')
+            ->first();
+
+        if (!$destinataire) {
+            return $this->errorResponse('Destinataire non trouvé ou inactif', 404);
+        }
+
+        // Empêcher les transferts vers soi-même
+        if ($destinataire->id === $user->id) {
+            return $this->errorResponse('Impossible de transférer vers soi-même', 400);
+        }
+
+        // Exécuter le transfert immédiatement
+        DB::transaction(function () use ($user, $request, $destinataire) {
+            // Débiter l'expéditeur
+            Transaction::create([
+                'uuid' => \Illuminate\Support\Str::uuid()->toString(),
+                'utilisateur_uuid' => $user->uuid,
+                'type' => 'transfert',
+                'montant' => -$request->montant,
+                'destinataire_uuid' => $destinataire->uuid,
+                'description' => 'Transfert envoyé',
+                'statut' => 'confirmee',
+            ]);
+
+            // Créditer le destinataire
+            Transaction::create([
+                'uuid' => \Illuminate\Support\Str::uuid()->toString(),
+                'utilisateur_uuid' => $destinataire->uuid,
+                'type' => 'depot',
+                'montant' => $request->montant,
+                'description' => 'Transfert reçu de ' . $user->nom,
+                'statut' => 'confirmee',
+            ]);
+        });
+
+        return $this->successResponse([
+            'type' => 'transfert',
+            'montant' => $request->montant,
+            'destinataire' => $destinataire->nom,
+            'numero_destinataire' => $destinataire->telephone,
+            'nouveau_solde' => $user->fresh()->solde,
+        ], 'Transfert effectué avec succès.');
     }
 
     /**
