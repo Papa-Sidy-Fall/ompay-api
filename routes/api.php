@@ -103,22 +103,38 @@ Route::get('/admin/reset-database', function () {
     try {
         // Exécuter migrate:fresh --seed
         \Illuminate\Support\Facades\Artisan::call('migrate:fresh --seed');
-
-        // Installer Passport après le reset
-        \Illuminate\Support\Facades\Artisan::call('passport:install', [
-            '--force' => true
-        ]);
-
-        // Récupérer le résultat
         $migrateOutput = \Illuminate\Support\Facades\Artisan::output();
-        $passportOutput = \Illuminate\Support\Facades\Artisan::output();
+
+        $passportOutput = null;
+        $passportInstalled = false;
+
+        // Essayer d'installer Passport (seulement si disponible)
+        try {
+            \Illuminate\Support\Facades\Artisan::call('passport:install', [
+                '--force' => true
+            ]);
+            $passportOutput = \Illuminate\Support\Facades\Artisan::output();
+            $passportInstalled = true;
+        } catch (\Exception $passportException) {
+            // Passport n'est pas disponible dans cet environnement
+            $passportOutput = 'Passport non disponible dans cet environnement: ' . $passportException->getMessage();
+        }
+
+        $message = $passportInstalled
+            ? 'Base de données reset et Passport installé avec succès'
+            : 'Base de données reset avec succès (Passport non disponible)';
+
+        $details = $passportInstalled
+            ? 'Toutes les tables ont été recréées, les seeders exécutés et Passport configuré'
+            : 'Toutes les tables ont été recréées et les seeders exécutés. Passport n\'est pas disponible dans cet environnement.';
 
         return response()->json([
             'success' => true,
-            'message' => 'Base de données reset et Passport installé avec succès',
-            'details' => 'Toutes les tables ont été recréées, les seeders exécutés et Passport configuré',
+            'message' => $message,
+            'details' => $details,
             'migrate_output' => $migrateOutput,
-            'passport_output' => $passportOutput
+            'passport_output' => $passportOutput,
+            'passport_installed' => $passportInstalled
         ]);
 
     } catch (\Exception $e) {

@@ -663,15 +663,32 @@
         ],
         "responses": {
           "200": {
-            "description": "Base de données reset et Passport installé avec succès",
+            "description": "Base de données reset avec ou sans Passport selon l'environnement",
             "content": {
               "application/json": {
-                "example": {
-                  "success": true,
-                  "message": "Base de données reset et Passport installé avec succès",
-                  "details": "Toutes les tables ont été recréées, les seeders exécutés et Passport configuré",
-                  "migrate_output": "Migration output...",
-                  "passport_output": "Passport installation output..."
+                "examples": {
+                  "with_passport": {
+                    "summary": "Reset avec Passport (environnement de développement)",
+                    "value": {
+                      "success": true,
+                      "message": "Base de données reset et Passport installé avec succès",
+                      "details": "Toutes les tables ont été recréées, les seeders exécutés et Passport configuré",
+                      "migrate_output": "Migration output...",
+                      "passport_output": "Passport installation output...",
+                      "passport_installed": true
+                    }
+                  },
+                  "without_passport": {
+                    "summary": "Reset sans Passport (environnement de production)",
+                    "value": {
+                      "success": true,
+                      "message": "Base de données reset avec succès (Passport non disponible)",
+                      "details": "Toutes les tables ont été recréées et les seeders exécutés. Passport n'est pas disponible dans cet environnement.",
+                      "migrate_output": "Migration output...",
+                      "passport_output": "Passport non disponible dans cet environnement: The command \"passport:install\" does not exist.",
+                      "passport_installed": false
+                    }
+                  }
                 }
               }
             }
