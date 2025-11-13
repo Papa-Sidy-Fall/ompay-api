@@ -172,7 +172,8 @@ class CompteController extends Controller
             return $this->errorResponse('Accès non autorisé', 403);
         }
 
-        $query = Transaction::where('utilisateur_uuid', $user->uuid)
+        $query = Transaction::with(['destinataire:id,nom,telephone'])
+            ->where('utilisateur_uuid', $user->uuid)
             ->orderBy('created_at', 'desc');
 
         // Filtrage par type
@@ -184,8 +185,30 @@ class CompteController extends Controller
         $perPage = $request->get('per_page', 15);
         $transactions = $query->paginate($perPage);
 
+        // Transformer les données pour inclure les infos lisibles
+        $transformedTransactions = $transactions->getCollection()->map(function ($transaction) use ($user) {
+            return [
+                'uuid' => $transaction->uuid,
+                'type' => $transaction->type,
+                'montant' => $transaction->montant,
+                'description' => $transaction->description,
+                'statut' => $transaction->statut,
+                'created_at' => $transaction->created_at,
+                // Informations de l'expéditeur (toujours l'utilisateur connecté)
+                'expediteur' => [
+                    'nom' => $user->nom,
+                    'telephone' => $user->telephone,
+                ],
+                // Informations du destinataire (si applicable)
+                'destinataire' => $transaction->destinataire ? [
+                    'nom' => $transaction->destinataire->nom,
+                    'telephone' => $transaction->destinataire->telephone,
+                ] : null,
+            ];
+        });
+
         return $this->successResponse([
-            'transactions' => $transactions->items(),
+            'transactions' => $transformedTransactions,
             'pagination' => [
                 'current_page' => $transactions->currentPage(),
                 'per_page' => $transactions->perPage(),
