@@ -46,7 +46,7 @@ class AuthController extends Controller
      *         required=true,
      *         @OA\JsonContent(
      *             required={"nom","telephone","pin"},
-     *             @OA\Property(property="nom", type="string", example="Jean Dupont", description="Nom de l'utilisateur"),
+     *             @OA\Property(property="nom", type="string", example="Papa Sidy Fall", description="Nom de l'utilisateur"),
      *             @OA\Property(property="telephone", type="string", example="771234567", description="Numéro de téléphone"),
      *             @OA\Property(property="pin", type="string", example="1234", description="Code PIN à 4 chiffres")
      *         )
@@ -61,7 +61,7 @@ class AuthController extends Controller
      *                 @OA\Property(property="utilisateur", type="object",
      *                     @OA\Property(property="id", type="integer", example=1),
      *                     @OA\Property(property="uuid", type="string", example="550e8400-e29b-41d4-a716-446655440000"),
-     *                     @OA\Property(property="nom", type="string", example="Jean Dupont"),
+     *                     @OA\Property(property="nom", type="string", example="Papa Sidy Fall"),
      *                     @OA\Property(property="telephone", type="string", example="771234567")
      *                 ),
      *                 @OA\Property(property="message_complementaire", type="string", example="Un code OTP a été envoyé à votre téléphone pour finaliser l'inscription")
@@ -83,18 +83,16 @@ class AuthController extends Controller
      */
     public function register(RegisterRequest $request)
     {
-        // Créer l'utilisateur complet (l'Observer enverra automatiquement l'OTP)
+        // Créer l'utilisateur avec statut inactif (l'Observer enverra automatiquement l'OTP)
         $user = User::create([
             'uuid' => Str::uuid()->toString(),
             'nom' => $request->nom,
             'telephone' => $request->telephone,
             'pin' => Hash::make($request->pin),
+            'statut' => 'inactif',
         ]);
 
-        return $this->successResponse([
-            'utilisateur' => $user,
-            'message_complementaire' => 'Un code OTP a été envoyé à votre téléphone pour finaliser l\'inscription'
-        ], 'Utilisateur créé avec succès. Vérifiez votre téléphone pour le code OTP.', 201);
+        return $this->successResponse(null, 'Un code OTP a été envoyé à votre téléphone pour finaliser l\'inscription.', 201);
     }
 
     /**
@@ -122,7 +120,7 @@ class AuthController extends Controller
      *                 @OA\Property(property="utilisateur", type="object",
      *                     @OA\Property(property="id", type="integer", example=1),
      *                     @OA\Property(property="uuid", type="string", example="550e8400-e29b-41d4-a716-446655440000"),
-     *                     @OA\Property(property="nom", type="string", example="Jean Dupont"),
+     *                     @OA\Property(property="nom", type="string", example="Papa Sidy Fall"),
      *                     @OA\Property(property="telephone", type="string", example="771234567")
      *                 ),
      *                 @OA\Property(property="message_complementaire", type="string", example="Un code OTP a été envoyé à votre numéro de téléphone")
@@ -167,15 +165,8 @@ class AuthController extends Controller
             'type' => 'connexion'
         ]);
 
-        $otpResponse = $otpController->sendOtp($sendOtpRequest);
+        $otpController->sendOtp($sendOtpRequest);
 
-        if ($otpResponse->getStatusCode() !== 200) {
-            return $this->errorResponse('Erreur lors de l\'envoi du code OTP', 500);
-        }
-
-        return $this->successResponse([
-            'utilisateur' => $user,
-            'message_complementaire' => 'Un code OTP a été envoyé à votre numéro de téléphone'
-        ], 'Veuillez vérifier votre téléphone avec le code OTP');
+        return $this->successResponse(null, 'Un code OTP a été envoyé à votre numéro de téléphone');
     }
 }

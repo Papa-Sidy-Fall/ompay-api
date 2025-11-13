@@ -43,7 +43,7 @@
                 "type": "object",
                 "required": ["nom", "telephone", "pin"],
                 "properties": {
-                  "nom": {"type": "string", "example": "Jean Dupont"},
+                  "nom": {"type": "string", "example": "Papa Sidy Fall"},
                   "telephone": {"type": "string", "example": "+221+221771234567"},
                   "pin": {"type": "string", "example": "1234"}
                 }
@@ -63,7 +63,7 @@
                     "utilisateur": {
                       "id": 1,
                       "uuid": "550e8400-e29b-41d4-a716-446655440000",
-                      "nom": "Jean Dupont",
+                      "nom": "Papa Sidy Fall",
                       "telephone": "+221771234567"
                     },
                     "message_complementaire": "Un code OTP a été envoyé à votre téléphone pour finaliser l'inscription"
@@ -121,7 +121,7 @@
                     "utilisateur": {
                       "id": 1,
                       "uuid": "550e8400-e29b-41d4-a716-446655440000",
-                      "nom": "Jean Dupont",
+                      "nom": "Papa Sidy Fall",
                       "telephone": "+221771234567"
                     },
                     "message_complementaire": "Un code OTP a été envoyé à votre numéro de téléphone"
@@ -188,41 +188,19 @@
                       "succes": true,
                       "message": "Code OTP vérifié avec succès",
                       "donnees": {
-                        "telephone": "+221771234567",
-                        "type": "inscription",
-                        "verifie": true,
-                        "utilisateur_existe": true,
-                        "utilisateur": {
-                          "id": 7,
-                          "uuid": "0549f1b0-2db1-4b9a-bf89-0ed594bb0bd0",
-                          "nom": "Jean Dupont",
-                          "telephone": "+221771234567",
-                          "email": null,
-                          "qr_code": "iVBORw0KGgoAAAANSUhEUgAA...",
-                          "created_at": "2025-11-11T11:47:37.000000Z",
-                          "updated_at": "2025-11-11T11:47:37.000000Z"
-                        },
-                        "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."
+                        "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9...",
+                        "type": "inscription"
                       }
                     }
                   },
                   "connexion": {
-                    "summary": "Vérification de connexion (avec token)",
+                    "summary": "Vérification de connexion",
                     "value": {
                       "succes": true,
                       "message": "Code OTP vérifié avec succès",
                       "donnees": {
-                        "telephone": "+221771234567",
-                        "type": "connexion",
-                        "verifie": true,
-                        "utilisateur": {
-                          "id": 1,
-                          "uuid": "550e8400-e29b-41d4-a716-446655440000",
-                          "nom": "Jean Dupont",
-                          "telephone": "+221771234567",
-                          "qr_code": "iVBORw0KGgoAAAANSUhEUgAA..."
-                        },
-                        "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."
+                        "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9...",
+                        "type": "connexion"
                       }
                     }
                   }
@@ -349,41 +327,29 @@
         }
       }
     },
-    "/api/transactions/pay": {
-      "post": {
-        "summary": "Effectuer un paiement",
-        "description": "Initie un paiement nécessitant confirmation OTP",
-        "tags": ["Transactions"],
+    "/api/compte": {
+      "get": {
+        "summary": "Informations du compte",
+        "description": "Récupère les informations du compte utilisateur connecté",
+        "tags": ["Compte"],
         "security": [{"bearerAuth": []}],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["montant"],
-                "properties": {
-                  "montant": {"type": "number", "example": 50.00},
-                  "description": {"type": "string", "example": "Paiement test"}
-                }
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
-            "description": "Code OTP envoyé pour confirmation",
+            "description": "Informations du compte",
             "content": {
               "application/json": {
                 "example": {
                   "succes": true,
-                  "message": "Code OTP envoyé pour confirmer la transaction",
+                  "message": "Informations du compte récupérées avec succès",
                   "donnees": {
-                    "transaction_id": "894fc500-b74d-4ede-891e-5f54b3f1ce6a",
-                    "montant": 50,
-                    "description": "Paiement test",
-                    "otp_required": true,
-                    "expire_at": "2025-11-11T09:56:29.000000Z"
+                    "utilisateur": {
+                      "id": 1,
+                      "nom": "Papa Sidy Fall",
+                      "telephone": "+221771234567",
+                      "statut": "actif"
+                    },
+                    "solde": "150.00",
+                    "qr_code": "base64encoded..."
                   }
                 }
               }
@@ -392,35 +358,32 @@
         }
       }
     },
-    "/api/transactions/confirm": {
-      "post": {
-        "summary": "Confirmer une transaction",
-        "description": "Valide une transaction avec le code OTP",
-        "tags": ["Transactions"],
+    "/api/compte/{id}/solde": {
+      "get": {
+        "summary": "Solde du compte",
+        "description": "Récupère uniquement le solde du compte",
+        "tags": ["Compte"],
         "security": [{"bearerAuth": []}],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["transaction_id", "code"],
-                "properties": {
-                  "transaction_id": {"type": "string", "example": "894fc500-b74d-4ede-891e-5f54b3f1ce6a"},
-                  "code": {"type": "string", "example": "0169"}
-                }
-              }
-            }
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "integer"},
+            "example": 1
           }
-        },
+        ],
         "responses": {
           "200": {
-            "description": "Transaction confirmée",
+            "description": "Solde récupéré",
             "content": {
               "application/json": {
                 "example": {
                   "succes": true,
-                  "message": "Transaction confirmée avec succès"
+                  "message": "Solde récupéré avec succès",
+                  "donnees": {
+                    "solde": "150.00"
+                  }
                 }
               }
             }
@@ -428,41 +391,216 @@
         }
       }
     },
-    "/api/transactions": {
-      "get": {
-        "summary": "Historique des transactions",
-        "description": "Récupère l'historique des transactions de l'utilisateur",
-        "tags": ["Transactions"],
+    "/api/compte/{id}/payer": {
+      "post": {
+        "summary": "Effectuer un paiement marchand",
+        "description": "Effectue immédiatement un paiement vers un marchand",
+        "tags": ["Compte"],
         "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "integer"},
+            "example": 1
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["montant", "code_marchand"],
+                "properties": {
+                  "montant": {"type": "number", "example": 50.00},
+                  "code_marchand": {"type": "string", "example": "ORANGE123"}
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Liste des transactions",
+            "description": "Paiement effectué",
             "content": {
               "application/json": {
                 "example": {
                   "succes": true,
-                  "message": "Opération réussie",
+                  "message": "Paiement effectué avec succès.",
+                  "donnees": {
+                    "type": "payer",
+                    "montant": 50.00,
+                    "marchand": "Orange Money",
+                    "nouveau_solde": "150.00"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solde insuffisant",
+            "content": {
+              "application/json": {
+                "example": {
+                  "succes": false,
+                  "message": "Solde insuffisant"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Marchand non trouvé",
+            "content": {
+              "application/json": {
+                "example": {
+                  "succes": false,
+                  "message": "Marchand non trouvé ou inactif"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/compte/{id}/transfert": {
+      "post": {
+        "summary": "Effectuer un transfert d'argent",
+        "description": "Effectue immédiatement un transfert vers un autre utilisateur",
+        "tags": ["Compte"],
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "integer"},
+            "example": 1
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["montant", "numero_destinataire"],
+                "properties": {
+                  "montant": {"type": "number", "example": 25.00},
+                  "numero_destinataire": {"type": "string", "example": "+221771234568"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Transfert effectué",
+            "content": {
+              "application/json": {
+                "example": {
+                  "succes": true,
+                  "message": "Transfert effectué avec succès.",
+                  "donnees": {
+                    "type": "transfert",
+                    "montant": 25.00,
+                    "destinataire": "Destinataire Test",
+                    "numero_destinataire": "+221771234568",
+                    "nouveau_solde": "175.00"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Erreur de validation",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "solde_insuffisant": {
+                    "summary": "Solde insuffisant",
+                    "value": {
+                      "succes": false,
+                      "message": "Solde insuffisant"
+                    }
+                  },
+                  "transfert_soi": {
+                    "summary": "Transfert vers soi-même",
+                    "value": {
+                      "succes": false,
+                      "message": "Impossible de transférer vers soi-même"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Destinataire non trouvé",
+            "content": {
+              "application/json": {
+                "example": {
+                  "succes": false,
+                  "message": "Destinataire non trouvé ou inactif"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/compte/{id}/transactions": {
+      "get": {
+        "summary": "Historique des transactions",
+        "description": "Récupère l'historique des transactions avec pagination et filtrage",
+        "tags": ["Compte"],
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "integer"},
+            "example": 1
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {"type": "string", "enum": ["payer", "transfert", "depot"]},
+            "example": "payer"
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "schema": {"type": "integer", "default": 15},
+            "example": 10
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transactions récupérées",
+            "content": {
+              "application/json": {
+                "example": {
+                  "succes": true,
+                  "message": "Transactions récupérées avec succès",
                   "donnees": {
                     "transactions": [
                       {
-                        "uuid": "bd86a2fa-99f4-4cbe-b5c7-75940c2df23e",
-                        "utilisateur_uuid": "d4663ad3-9512-43d1-aa95-83ab84a0caf5",
-                        "type": "paiement",
-                        "montant": "-50.00",
-                        "destinataire_uuid": null,
-                        "description": "Paiement confirmé",
-                        "created_at": "2025-11-11T09:53:24.000000Z"
-                      },
-                      {
-                        "uuid": "ec266bd9-94a9-41d3-bfbb-f6e3f895feb5",
-                        "utilisateur_uuid": "d4663ad3-9512-43d1-aa95-83ab84a0caf5",
-                        "type": "depot",
-                        "montant": "100.00",
-                        "destinataire_uuid": null,
-                        "description": "Dépôt initial",
-                        "created_at": "2025-11-11T09:48:08.000000Z"
+                        "uuid": "uuid-here",
+                        "type": "payer",
+                        "montant": -50.00,
+                        "description": "Paiement",
+                        "created_at": "2025-11-12T00:00:00Z"
                       }
-                    ]
+                    ],
+                    "pagination": {
+                      "current_page": 1,
+                      "per_page": 15,
+                      "total": 25,
+                      "last_page": 2
+                    }
                   }
                 }
               }
@@ -518,6 +656,61 @@
               "application/json": {
                 "example": {
                   "error": "Erreur lors du reset",
+                  "message": "Détails de l'erreur"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/reset-passport": {
+      "get": {
+        "summary": "Réinstaller Passport (TEST UNIQUEMENT)",
+        "description": "🚨 ENDPOINT DE TEST DANGEREUX - Réinstalle Passport après reset DB. PROTÉGÉ mais À SUPPRIMER APRÈS TESTS !",
+        "tags": ["Administration"],
+        "parameters": [
+          {
+            "name": "secret",
+            "in": "query",
+            "required": true,
+            "description": "Clé secrète de test (changez-la !)",
+            "schema": {
+              "type": "string",
+              "example": "ompay-admin-2025-test-only"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Passport réinstallé avec succès",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Passport réinstallé avec succès",
+                  "warning": "⚠️ CET ENDPOINT DOIT ÊTRE SUPPRIMÉ APRÈS LES TESTS !"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès non autorisé",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": "Accès non autorisé",
+                  "message": "Secret requis ou environnement non autorisé"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erreur lors de la réinstallation",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": "Erreur lors de la réinstallation",
                   "message": "Détails de l'erreur"
                 }
               }

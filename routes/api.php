@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CompteController;
 use App\Http\Controllers\DistributeurController;
 use App\Http\Controllers\OtpController;
 use App\Http\Controllers\TransactionController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -25,10 +27,17 @@ Route::post('/auth/login', [AuthController::class, 'login']);
 
 // Protected routes (nécessitent un token Bearer)
 Route::middleware('auth:api')->group(function () {
+    // Compte
+    Route::get('/compte', [CompteController::class, 'show']);
+    Route::get('/compte/{id}/solde', [CompteController::class, 'solde']);
+    Route::post('/compte/{id}/payer', [CompteController::class, 'payer']);
+    Route::post('/compte/{id}/transfert', [CompteController::class, 'transfert']);
+    Route::get('/compte/{id}/transactions', [CompteController::class, 'transactions']);
+
+    // Anciens endpoints (maintenir pour compatibilité)
     Route::post('/transactions/pay', [TransactionController::class, 'pay']);
     Route::post('/transactions/transfert', [TransactionController::class, 'transfer']);
     Route::post('/transactions/depot', [DistributeurController::class, 'depot']);
-    Route::post('/transactions/confirm', [TransactionController::class, 'confirmTransaction']);
     Route::get('/transactions', [TransactionController::class, 'index']);
     Route::get('/transactions/{uuid}', [TransactionController::class, 'show']);
     Route::get('/distributeurs', [DistributeurController::class, 'index']);
@@ -122,4 +131,45 @@ Route::get('/documentation', function () {
     }
 
     return response()->json(['error' => 'Documentation not found'], 404);
+});
+
+// ENDPOINT DE TEST UNIQUEMENT - À SUPPRIMER APRÈS TESTS !
+Route::get('/admin/reset-passport', function (Request $request) {
+    // PROTECTIONS MAXIMALES POUR TESTS UNIQUEMENT
+    $secret = $request->query('secret');
+
+    // Vérifier le secret (changez-le !)
+    if ($secret !== 'ompay-admin-2025-test-only') {
+        return response()->json([
+            'error' => 'Accès non autorisé',
+            'message' => 'Secret requis pour cette opération dangereuse'
+        ], 403);
+    }
+
+    // Vérifier que c'est un environnement de développement/test
+    if (!app()->environment(['local', 'testing'])) {
+        return response()->json([
+            'error' => 'Opération interdite',
+            'message' => 'Cette opération n\'est autorisée qu\'en développement'
+        ], 403);
+    }
+
+    try {
+        // Réinstaller Passport
+        \Illuminate\Support\Facades\Artisan::call('passport:install', [
+            '--force' => true
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Passport réinstallé avec succès',
+            'warning' => '⚠️ CET ENDPOINT DOIT ÊTRE SUPPRIMÉ APRÈS LES TESTS !'
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Erreur lors de la réinstallation',
+            'message' => $e->getMessage()
+        ], 500);
+    }
 });

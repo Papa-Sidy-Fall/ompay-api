@@ -167,7 +167,7 @@ class OtpController extends Controller
      *                 @OA\Property(property="utilisateur", type="object",
      *                     @OA\Property(property="id", type="integer", example=1),
      *                     @OA\Property(property="uuid", type="string", example="550e8400-e29b-41d4-a716-446655440000"),
-     *                     @OA\Property(property="nom", type="string", example="Jean Dupont"),
+     *                     @OA\Property(property="nom", type="string", example="Papa Sidy Fall"),
      *                     @OA\Property(property="telephone", type="string", example="771234567")
      *                 ),
      *                 @OA\Property(property="token", type="string", example="eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9...", description="Token JWT pour l'authentification (uniquement pour connexion)")
@@ -225,22 +225,25 @@ class OtpController extends Controller
                 'verifie' => true,
             ];
 
-            // Pour l'inscription et la connexion, retourner l'utilisateur avec token
+            // Pour l'inscription et la connexion, retourner seulement le token et le type
             if ($request->type === 'inscription' || $request->type === 'connexion') {
                 $user = User::where('telephone', $request->telephone)->first();
                 if ($user) {
+                    // Pour l'inscription, activer le compte
+                    if ($request->type === 'inscription') {
+                        $user->update(['statut' => 'actif']);
+                    }
+
                     $token = $user->createToken('OmPay')->accessToken;
-                    $data['utilisateur'] = $user;
                     $data['token'] = $token;
-                    $data['utilisateur_existe'] = true;
+                    $data['type'] = $request->type;
 
                     // Marquer le code comme utilisé seulement après succès
                     $otp->markAsUsed();
                 } else {
                     // Pour l'inscription, si l'utilisateur n'existe pas, c'est anormal
                     // car il devrait être créé lors de register
-                    $data['utilisateur_existe'] = false;
-                    $data['utilisateur'] = null;
+                    return $this->errorResponse('Utilisateur non trouvé', 404);
                 }
             }
 

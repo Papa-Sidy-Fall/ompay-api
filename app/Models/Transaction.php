@@ -20,6 +20,7 @@ class Transaction extends Model
         'montant',
         'destinataire_uuid',
         'description',
+        'statut',
     ];
 
     protected static function boot()
