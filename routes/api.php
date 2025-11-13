@@ -43,7 +43,6 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/distributeurs', [DistributeurController::class, 'index']);
 });
 
-// Route pour reset la base de données (ADMIN seulement - À SUPPRIMER APRÈS USAGE)
 /**
  * @OA\Get(
  *     path="/api/admin/reset-database",
@@ -86,7 +85,7 @@ Route::middleware('auth:api')->group(function () {
  * )
  */
 Route::get('/admin/reset-database', function () {
-    // ⚠️ ENDPOINT DANGEREUX - À SUPPRIMER APRÈS USAGE EN PRODUCTION
+    // ⚠️ ENDPOINT DANGEREUX - Reset DB + Passport - À SUPPRIMER APRÈS USAGE EN PRODUCTION
 
     // Vérification de sécurité basique
     $secret = request()->query('secret');
@@ -103,14 +102,21 @@ Route::get('/admin/reset-database', function () {
         // Exécuter migrate:fresh --seed
         \Illuminate\Support\Facades\Artisan::call('migrate:fresh --seed');
 
+        // Installer Passport après le reset
+        \Illuminate\Support\Facades\Artisan::call('passport:install', [
+            '--force' => true
+        ]);
+
         // Récupérer le résultat
-        $output = \Illuminate\Support\Facades\Artisan::output();
+        $migrateOutput = \Illuminate\Support\Facades\Artisan::output();
+        $passportOutput = \Illuminate\Support\Facades\Artisan::output();
 
         return response()->json([
             'success' => true,
-            'message' => 'Base de données reset avec succès',
-            'details' => 'Toutes les tables ont été recréées et les seeders exécutés',
-            'output' => $output
+            'message' => 'Base de données reset et Passport installé avec succès',
+            'details' => 'Toutes les tables ont été recréées, les seeders exécutés et Passport configuré',
+            'migrate_output' => $migrateOutput,
+            'passport_output' => $passportOutput
         ]);
 
     } catch (\Exception $e) {
@@ -131,45 +137,4 @@ Route::get('/documentation', function () {
     }
 
     return response()->json(['error' => 'Documentation not found'], 404);
-});
-
-// ENDPOINT DE TEST UNIQUEMENT - À SUPPRIMER APRÈS TESTS !
-Route::get('/admin/reset-passport', function (Request $request) {
-    // PROTECTIONS MAXIMALES POUR TESTS UNIQUEMENT
-    $secret = $request->query('secret');
-
-    // Vérifier le secret (changez-le !)
-    if ($secret !== 'ompay-admin-2025-test-only') {
-        return response()->json([
-            'error' => 'Accès non autorisé',
-            'message' => 'Secret requis pour cette opération dangereuse'
-        ], 403);
-    }
-
-    // Vérifier que c'est un environnement de développement/test
-    if (!app()->environment(['local', 'testing'])) {
-        return response()->json([
-            'error' => 'Opération interdite',
-            'message' => 'Cette opération n\'est autorisée qu\'en développement'
-        ], 403);
-    }
-
-    try {
-        // Réinstaller Passport
-        \Illuminate\Support\Facades\Artisan::call('passport:install', [
-            '--force' => true
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Passport réinstallé avec succès',
-            'warning' => '⚠️ CET ENDPOINT DOIT ÊTRE SUPPRIMÉ APRÈS LES TESTS !'
-        ]);
-
-    } catch (\Exception $e) {
-        return response()->json([
-            'error' => 'Erreur lors de la réinstallation',
-            'message' => $e->getMessage()
-        ], 500);
-    }
 });

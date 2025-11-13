@@ -646,8 +646,8 @@
     },
     "/api/admin/reset-database": {
       "get": {
-        "summary": "Reset de la base de données (ADMIN)",
-        "description": "⚠️ ENDPOINT DANGEREUX - Reset complet de la base de données avec migrations et seeders. À SUPPRIMER APRÈS USAGE !",
+        "summary": "Reset complet DB + Passport (ADMIN)",
+        "description": "⚠️ ENDPOINT DANGEREUX - Reset complet de la base de données avec migrations, seeders et installation de Passport. À SUPPRIMER APRÈS USAGE !",
         "tags": ["Administration"],
         "parameters": [
           {
@@ -663,13 +663,15 @@
         ],
         "responses": {
           "200": {
-            "description": "Base de données reset avec succès",
+            "description": "Base de données reset et Passport installé avec succès",
             "content": {
               "application/json": {
                 "example": {
                   "success": true,
-                  "message": "Base de données reset avec succès",
-                  "details": "Toutes les tables ont été recréées et les seeders exécutés"
+                  "message": "Base de données reset et Passport installé avec succès",
+                  "details": "Toutes les tables ont été recréées, les seeders exécutés et Passport configuré",
+                  "migrate_output": "Migration output...",
+                  "passport_output": "Passport installation output..."
                 }
               }
             }
@@ -691,61 +693,6 @@
               "application/json": {
                 "example": {
                   "error": "Erreur lors du reset",
-                  "message": "Détails de l'erreur"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/admin/reset-passport": {
-      "get": {
-        "summary": "Réinstaller Passport (TEST UNIQUEMENT)",
-        "description": "🚨 ENDPOINT DE TEST DANGEREUX - Réinstalle Passport après reset DB. PROTÉGÉ mais À SUPPRIMER APRÈS TESTS !",
-        "tags": ["Administration"],
-        "parameters": [
-          {
-            "name": "secret",
-            "in": "query",
-            "required": true,
-            "description": "Clé secrète de test (changez-la !)",
-            "schema": {
-              "type": "string",
-              "example": "ompay-admin-2025-test-only"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Passport réinstallé avec succès",
-            "content": {
-              "application/json": {
-                "example": {
-                  "success": true,
-                  "message": "Passport réinstallé avec succès",
-                  "warning": "⚠️ CET ENDPOINT DOIT ÊTRE SUPPRIMÉ APRÈS LES TESTS !"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Accès non autorisé",
-            "content": {
-              "application/json": {
-                "example": {
-                  "error": "Accès non autorisé",
-                  "message": "Secret requis ou environnement non autorisé"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Erreur lors de la réinstallation",
-            "content": {
-              "application/json": {
-                "example": {
-                  "error": "Erreur lors de la réinstallation",
                   "message": "Détails de l'erreur"
                 }
               }
