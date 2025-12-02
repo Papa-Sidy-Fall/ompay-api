@@ -145,6 +145,58 @@ Route::get('/admin/reset-database', function () {
     }
 });
 
+/**
+ * @OA\Get(
+ *     path="/api/admin/otps",
+ *     summary="Lister tous les OTPs (ADMIN)",
+ *     description="Endpoint pour déboguer les OTPs en production",
+ *     operationId="listOtps",
+ *     tags={"Administration"},
+ *     @OA\Parameter(
+ *         name="secret",
+ *         in="query",
+ *         required=true,
+ *         description="Clé secrète d'administration",
+ *         @OA\Schema(type="string", example="ompay-admin-2025")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Liste des OTPs",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="success", type="boolean", example=true),
+ *             @OA\Property(property="otps", type="array", @OA\Items(type="object"))
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=403,
+ *         description="Accès non autorisé",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string", example="Accès non autorisé"),
+ *             @OA\Property(property="message", type="string", example="Clé secrète requise")
+ *         )
+ *     )
+ * )
+ */
+Route::get('/admin/otps', function () {
+    // Vérification de sécurité basique
+    $secret = request()->query('secret');
+    $expectedSecret = env('ADMIN_SECRET', 'ompay-admin-2025');
+
+    if ($secret !== $expectedSecret) {
+        return response()->json([
+            'error' => 'Accès non autorisé',
+            'message' => 'Clé secrète requise'
+        ], 403);
+    }
+
+    $otps = \App\Models\Otp::all()->toArray();
+
+    return response()->json([
+        'success' => true,
+        'otps' => $otps
+    ]);
+});
+
 // Route pour la documentation Swagger
 Route::get('/documentation', function () {
     $path = storage_path('docs/api-docs.json');
