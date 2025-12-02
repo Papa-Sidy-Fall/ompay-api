@@ -18,5 +18,12 @@ class UserSeeder extends Seeder
             'pin' => '1234',
             'statut' => 'actif',
         ]);
+
+        User::create([
+            'nom' => 'Papa Sidy Fall',
+            'telephone' => '+221775943708',
+            'pin' => '1234',
+            'statut' => 'actif',
+        ]);
     }
 }
