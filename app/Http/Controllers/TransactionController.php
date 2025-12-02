@@ -52,9 +52,13 @@ class TransactionController extends Controller
     public function transfer(TransferRequest $request)
     {
         $user = $request->user();
-        $destinataire = User::where('uuid', $request->destinataire_uuid)->first();
+        $destinataire = User::where('telephone', $request->destinataire_telephone)->first();
 
-        if ($user->uuid === $destinataire->uuid) {
+        if (!$destinataire) {
+            return $this->errorResponse('Destinataire non trouvé', 404);
+        }
+
+        if ($user->telephone === $destinataire->telephone) {
             return $this->errorResponse('Vous ne pouvez pas vous transférer à vous-même', 400);
         }
 
@@ -75,7 +79,8 @@ class TransactionController extends Controller
         return $this->successResponse([
             'transaction_id' => Str::uuid()->toString(),
             'montant' => $request->montant,
-            'destinataire_uuid' => $request->destinataire_uuid,
+            'destinataire_telephone' => $request->destinataire_telephone,
+            'destinataire_nom' => $destinataire->nom,
             'description' => $request->description,
             'otp_required' => true,
             'expire_at' => Carbon::now()->addMinutes(5)->toISOString(),

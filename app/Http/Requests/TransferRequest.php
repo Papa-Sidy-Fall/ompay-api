@@ -22,7 +22,7 @@ class TransferRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'destinataire_uuid' => 'required|uuid|exists:users,uuid',
+            'destinataire_telephone' => 'required|string|exists:users,telephone',
             'montant' => 'required|numeric|min:0.01',
             'description' => 'nullable|string|max:255',
         ];
@@ -34,9 +34,9 @@ class TransferRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'destinataire_uuid.required' => 'L\'UUID du destinataire est obligatoire',
-            'destinataire_uuid.uuid' => 'L\'UUID du destinataire doit être valide',
-            'destinataire_uuid.exists' => 'Le destinataire n\'existe pas',
+            'destinataire_telephone.required' => 'Le téléphone du destinataire est obligatoire',
+            'destinataire_telephone.string' => 'Le téléphone du destinataire doit être une chaîne',
+            'destinataire_telephone.exists' => 'Le destinataire n\'existe pas',
             'montant.required' => 'Le montant est obligatoire',
             'montant.numeric' => 'Le montant doit être un nombre',
             'montant.min' => 'Le montant doit être supérieur à 0',
