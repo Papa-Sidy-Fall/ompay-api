@@ -76,6 +76,8 @@ RUN echo '#!/bin/sh' > /usr/local/bin/docker-entrypoint.sh && \
     echo 'fi' >> /usr/local/bin/docker-entrypoint.sh && \
     echo 'echo "📊 Exécution des migrations..."' >> /usr/local/bin/docker-entrypoint.sh && \
     echo 'php artisan migrate --force || echo "⚠️ Erreur lors des migrations"' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo "🌱 Exécution des seeders..."' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'php artisan db:seed --force || echo "⚠️ Erreur lors des seeders"' >> /usr/local/bin/docker-entrypoint.sh && \
     echo 'echo "🔐 Installation de Passport..."' >> /usr/local/bin/docker-entrypoint.sh && \
     echo 'if [ ! -f "storage/oauth-private.key" ] || [ ! -f "storage/oauth-public.key" ]; then' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '    echo "Génération des clés Passport..."' >> /usr/local/bin/docker-entrypoint.sh && \

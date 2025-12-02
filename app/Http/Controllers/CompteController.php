@@ -48,49 +48,81 @@ class CompteController extends Controller
     }
 
     /**
-     * Effectuer un paiement marchand
+     * Effectuer un paiement (marchand ou vers numéro de téléphone)
      */
     public function payer(Request $request, $id)
     {
         $user = $request->user();
 
-        // Validation
+        // Validation - accepter soit code_marchand soit numero_destinataire
         $request->validate([
             'montant' => 'required|numeric|min:0.01',
-            'code_marchand' => 'required|string',
+            'code_marchand' => 'nullable|string',
+            'numero_destinataire' => 'nullable|string',
         ]);
+
+        // Vérifier qu'au moins un des deux champs est fourni
+        if (!$request->code_marchand && !$request->numero_destinataire) {
+            return $this->errorResponse('Code marchand ou numéro de destinataire requis', 400);
+        }
 
         // Vérifier le solde
         if ($user->solde < $request->montant) {
             return $this->errorResponse('Solde insuffisant', 400);
         }
 
-        // Vérifier que le marchand existe
-        $marchand = DB::table('marchands')
-            ->where('code_marchand', $request->code_marchand)
-            ->where('statut', 'actif')
-            ->first();
+        $description = '';
+        $destinataireInfo = '';
 
-        if (!$marchand) {
-            return $this->errorResponse('Marchand non trouvé ou inactif', 404);
+        // Cas 1: Paiement vers un marchand
+        if ($request->code_marchand) {
+            $marchand = DB::table('marchands')
+                ->where('code_marchand', $request->code_marchand)
+                ->where('statut', 'actif')
+                ->first();
+
+            if (!$marchand) {
+                return $this->errorResponse('Marchand non trouvé ou inactif', 404);
+            }
+
+            $description = 'Paiement marchand - ' . $marchand->nom;
+            $destinataireInfo = $marchand->nom;
+        }
+        // Cas 2: Paiement vers un numéro de téléphone
+        elseif ($request->numero_destinataire) {
+            $destinataire = User::where('telephone', $request->numero_destinataire)
+                ->where('statut', 'actif')
+                ->first();
+
+            if (!$destinataire) {
+                return $this->errorResponse('Destinataire non trouvé ou inactif', 404);
+            }
+
+            // Empêcher les paiements vers soi-même
+            if ($destinataire->id === $user->id) {
+                return $this->errorResponse('Impossible de payer vers soi-même', 400);
+            }
+
+            $description = 'Paiement vers ' . $destinataire->nom;
+            $destinataireInfo = $destinataire->nom . ' (' . $destinataire->telephone . ')';
         }
 
         // Exécuter le paiement immédiatement
-        DB::transaction(function () use ($user, $request, $marchand) {
+        DB::transaction(function () use ($user, $request, $description) {
             Transaction::create([
                 'uuid' => \Illuminate\Support\Str::uuid()->toString(),
                 'utilisateur_uuid' => $user->uuid,
-                'type' => 'payer',
+                'type' => 'paiement',
                 'montant' => -$request->montant,
-                'description' => 'Paiement marchand - ' . $marchand->nom,
+                'description' => $description,
                 'statut' => 'confirmee',
             ]);
         });
 
         return $this->successResponse([
-            'type' => 'payer',
+            'type' => 'paiement',
             'montant' => $request->montant,
-            'marchand' => $marchand->nom,
+            'destinataire' => $destinataireInfo,
             'nouveau_solde' => $user->fresh()->solde,
         ], 'Paiement effectué avec succès.');
     }
@@ -177,7 +209,7 @@ class CompteController extends Controller
             ->orderBy('created_at', 'desc');
 
         // Filtrage par type
-        if ($request->has('type') && in_array($request->type, ['payer', 'transfert', 'depot'])) {
+        if ($request->has('type') && in_array($request->type, ['paiement', 'transfert', 'depot'])) {
             $query->where('type', $request->type);
         }
 
